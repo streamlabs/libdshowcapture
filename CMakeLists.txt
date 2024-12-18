@@ -114,6 +114,8 @@ set(libdshowcapture_HEADERS
 add_library(libdshowcapture ${libdshowcapture_SOURCES}
                             ${libdshowcapture_HEADERS})
 
+target_compile_definitions(libdshowcapture PRIVATE NOMINMAX)
+
 target_include_directories(
   libdshowcapture
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/capture-device-support/Library)
