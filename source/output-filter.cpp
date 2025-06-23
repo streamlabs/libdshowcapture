@@ -37,9 +37,7 @@ namespace DShow {
 
 OutputPin::OutputPin(OutputFilter *filter_) : refCount(0), filter(filter_) {}
 
-OutputPin::OutputPin(OutputFilter *filter_, VideoFormat format, int cx, int cy,
-		     long long interval)
-	: OutputPin(filter_)
+OutputPin::OutputPin(OutputFilter *filter_, VideoFormat format, int cx, int cy, long long interval) : OutputPin(filter_)
 {
 	curCX = cx;
 	curCY = cy;
@@ -135,8 +133,7 @@ STDMETHODIMP OutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 	return S_OK;
 }
 
-STDMETHODIMP OutputPin::ReceiveConnection(IPin *pConnector,
-					  const AM_MEDIA_TYPE *pmt)
+STDMETHODIMP OutputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
 {
 	PrintFunc(L"OutputPin::ReceiveConnection");
 
@@ -304,8 +301,7 @@ STDMETHODIMP OutputPin::GetNumberOfCapabilities(int *piCount, int *piSize)
 	return S_OK;
 }
 
-STDMETHODIMP OutputPin::GetStreamCaps(int iIndex, AM_MEDIA_TYPE **ppmt,
-				      BYTE *pSCC)
+STDMETHODIMP OutputPin::GetStreamCaps(int iIndex, AM_MEDIA_TYPE **ppmt, BYTE *pSCC)
 {
 	PrintFunc(L"OutputPin::GetStreamCaps");
 
@@ -370,8 +366,7 @@ STDMETHODIMP OutputPin::Set(REFGUID, DWORD, void *, DWORD, void *, DWORD)
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP OutputPin::Get(REFGUID guidPropSet, DWORD dwPropID, void *, DWORD,
-			    void *pPropData, DWORD cbPropData,
+STDMETHODIMP OutputPin::Get(REFGUID guidPropSet, DWORD dwPropID, void *, DWORD, void *pPropData, DWORD cbPropData,
 			    DWORD *pcbReturned)
 {
 	PrintFunc(L"OutputPin::Get");
@@ -394,8 +389,7 @@ STDMETHODIMP OutputPin::Get(REFGUID guidPropSet, DWORD dwPropID, void *, DWORD,
 	return S_OK;
 }
 
-STDMETHODIMP OutputPin::QuerySupported(REFGUID guidPropSet, DWORD dwPropID,
-				       DWORD *pTypeSupport)
+STDMETHODIMP OutputPin::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport)
 {
 	PrintFunc(L"OutputPin::QuerySupported");
 
@@ -422,9 +416,7 @@ bool OutputPin::AllocateBuffers(IPin *target, bool connecting)
 
 	hr = memInput->GetAllocator(&allocator);
 	if (hr == VFW_E_NO_ALLOCATOR)
-		hr = CoCreateInstance(CLSID_MemoryAllocator, NULL,
-				      CLSCTX_INPROC_SERVER,
-				      __uuidof(IMemAllocator),
+		hr = CoCreateInstance(CLSID_MemoryAllocator, NULL, CLSCTX_INPROC_SERVER, __uuidof(IMemAllocator),
 				      (void **)&allocator);
 
 	if (FAILED(hr))
@@ -465,15 +457,13 @@ bool OutputPin::AllocateBuffers(IPin *target, bool connecting)
 	return true;
 }
 
-static MediaType CreateMediaType(VideoFormat format, int cx, int cy,
-				 long long interval)
+static MediaType CreateMediaType(VideoFormat format, int cx, int cy, long long interval)
 {
 	MediaType mt;
 
 	WORD bits = VFormatBits(format);
 	DWORD size = cx * cy * bits / 8;
-	uint64_t rate =
-		(uint64_t)size * 10000000ULL / (uint64_t)interval * 8ULL;
+	uint64_t rate = (uint64_t)size * 10000000ULL / (uint64_t)interval * 8ULL;
 
 	VIDEOINFOHEADER *vih = mt.AllocFormat<VIDEOINFOHEADER>();
 	vih->bmiHeader.biSize = sizeof(vih->bmiHeader);
@@ -498,20 +488,17 @@ static MediaType CreateMediaType(VideoFormat format, int cx, int cy,
 	return mt;
 }
 
-void OutputPin::AddVideoFormat(VideoFormat format, int cx, int cy,
-			       long long interval)
+void OutputPin::AddVideoFormat(VideoFormat format, int cx, int cy, long long interval)
 {
 	MediaType newMT = CreateMediaType(format, cx, cy, interval);
 	mtList.push_back(newMT);
 }
 
-bool OutputPin::SetVideoFormat(VideoFormat format, int cx, int cy,
-			       long long interval)
+bool OutputPin::SetVideoFormat(VideoFormat format, int cx, int cy, long long interval)
 {
 	mt = CreateMediaType(format, cx, cy, interval);
 
-	if (curCX != cx || curCY != cy || curInterval != interval ||
-	    curVFormat != format) {
+	if (curCX != cx || curCY != cy || curInterval != interval || curVFormat != format) {
 		curVFormat = format;
 		curCX = cx;
 		curCY = cy;
@@ -558,9 +545,8 @@ bool OutputPin::LockSampleData(unsigned char **ptr)
 	return true;
 }
 
-void OutputPin::Send(unsigned char *data[DSHOW_MAX_PLANES],
-		     size_t linesize[DSHOW_MAX_PLANES],
-		     long long timestampStart, long long timestampEnd)
+void OutputPin::Send(unsigned char *data[DSHOW_MAX_PLANES], size_t linesize[DSHOW_MAX_PLANES], long long timestampStart,
+		     long long timestampEnd)
 {
 	BYTE *ptr;
 	if (!LockSampleData(&ptr))
@@ -578,8 +564,7 @@ void OutputPin::Send(unsigned char *data[DSHOW_MAX_PLANES],
 	UnlockSampleData(timestampStart, timestampEnd);
 }
 
-void OutputPin::UnlockSampleData(long long timestampStart,
-				 long long timestampEnd)
+void OutputPin::UnlockSampleData(long long timestampStart, long long timestampEnd)
 {
 	if (!connectedPin)
 		return;
@@ -626,10 +611,7 @@ public:
 		return NOERROR;
 	}
 
-	STDMETHODIMP_(ULONG) AddRef()
-	{
-		return InterlockedIncrement(&refCount);
-	}
+	STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
 
 	STDMETHODIMP_(ULONG) Release()
 	{
@@ -641,10 +623,7 @@ public:
 		return refCount;
 	}
 
-	STDMETHODIMP_(ULONG) GetMiscFlags()
-	{
-		return AM_FILTER_MISC_FLAGS_IS_SOURCE;
-	}
+	STDMETHODIMP_(ULONG) GetMiscFlags() { return AM_FILTER_MISC_FLAGS_IS_SOURCE; }
 };
 
 OutputFilter::OutputFilter()
@@ -656,8 +635,7 @@ OutputFilter::OutputFilter()
 {
 }
 
-OutputFilter::OutputFilter(VideoFormat format, int cx, int cy,
-			   long long interval)
+OutputFilter::OutputFilter(VideoFormat format, int cx, int cy, long long interval)
 	: refCount(0),
 	  state(State_Stopped),
 	  graph(nullptr),
@@ -837,8 +815,7 @@ const wchar_t *OutputFilter::FilterName() const
 
 // ============================================================================
 
-OutputEnumPins::OutputEnumPins(OutputFilter *filter_, OutputEnumPins *pEnum)
-	: filter(filter_)
+OutputEnumPins::OutputEnumPins(OutputFilter *filter_, OutputEnumPins *pEnum) : filter(filter_)
 {
 	curPin = (pEnum != nullptr) ? pEnum->curPin : 0;
 }
@@ -945,9 +922,7 @@ STDMETHODIMP_(ULONG) OutputEnumMediaTypes::Release()
 }
 
 // IEnumMediaTypes
-STDMETHODIMP OutputEnumMediaTypes::Next(ULONG cMediaTypes,
-					AM_MEDIA_TYPE **ppMediaTypes,
-					ULONG *pcFetched)
+STDMETHODIMP OutputEnumMediaTypes::Next(ULONG cMediaTypes, AM_MEDIA_TYPE **ppMediaTypes, ULONG *pcFetched)
 {
 	PrintFunc(L"OutputEnumMediaTypes::Next");
 

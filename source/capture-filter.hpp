@@ -59,8 +59,7 @@ public:
 
 	// IPin methods
 	STDMETHODIMP Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt);
-	STDMETHODIMP ReceiveConnection(IPin *connector,
-				       const AM_MEDIA_TYPE *pmt);
+	STDMETHODIMP ReceiveConnection(IPin *connector, const AM_MEDIA_TYPE *pmt);
 	STDMETHODIMP Disconnect();
 	STDMETHODIMP ConnectedTo(IPin **pPin);
 	STDMETHODIMP ConnectionMediaType(AM_MEDIA_TYPE *pmt);
@@ -74,16 +73,14 @@ public:
 
 	STDMETHODIMP BeginFlush();
 	STDMETHODIMP EndFlush();
-	STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop,
-				double dRate);
+	STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
 	// IMemInputPin methods
 	STDMETHODIMP GetAllocator(IMemAllocator **ppAllocator);
 	STDMETHODIMP NotifyAllocator(IMemAllocator *pAllocator, BOOL bReadOnly);
 	STDMETHODIMP GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps);
 	STDMETHODIMP Receive(IMediaSample *pSample);
-	STDMETHODIMP ReceiveMultiple(IMediaSample **pSamples, long nSamples,
-				     long *nSamplesProcessed);
+	STDMETHODIMP ReceiveMultiple(IMediaSample **pSamples, long nSamples, long *nSamplesProcessed);
 	STDMETHODIMP ReceiveCanBlock();
 };
 
@@ -163,8 +160,7 @@ public:
 	STDMETHODIMP_(ULONG) Release();
 
 	// IEnumMediaTypes
-	STDMETHODIMP Next(ULONG cMediaTypes, AM_MEDIA_TYPE **ppMediaTypes,
-			  ULONG *pcFetched);
+	STDMETHODIMP Next(ULONG cMediaTypes, AM_MEDIA_TYPE **ppMediaTypes, ULONG *pcFetched);
 	STDMETHODIMP Skip(ULONG cMediaTypes);
 	STDMETHODIMP Reset();
 	STDMETHODIMP Clone(IEnumMediaTypes **ppEnum);

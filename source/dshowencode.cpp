@@ -69,25 +69,20 @@ bool VideoEncoder::GetConfig(VideoEncoderConfig &config) const
 	return true;
 }
 
-bool VideoEncoder::Encode(unsigned char *data[DSHOW_MAX_PLANES],
-			  size_t linesize[DSHOW_MAX_PLANES],
-			  long long timestampStart, long long timestampEnd,
-			  EncoderPacket &packet, bool &new_packet)
+bool VideoEncoder::Encode(unsigned char *data[DSHOW_MAX_PLANES], size_t linesize[DSHOW_MAX_PLANES],
+			  long long timestampStart, long long timestampEnd, EncoderPacket &packet, bool &new_packet)
 {
 	if (context->encoder == nullptr)
 		return false;
 
-	return context->Encode(data, linesize, timestampStart, timestampEnd,
-			       packet, new_packet);
+	return context->Encode(data, linesize, timestampStart, timestampEnd, packet, new_packet);
 }
 
-static bool EnumVideoEncoder(vector<DeviceId> &encoders, IBaseFilter *encoder,
-			     const wchar_t *deviceName,
+static bool EnumVideoEncoder(vector<DeviceId> &encoders, IBaseFilter *encoder, const wchar_t *deviceName,
 			     const wchar_t *devicePath)
 {
 	DeviceId id;
-	bool validDevice = wcsstr(deviceName, L"C985") ||
-			   wcsstr(deviceName, L"C353");
+	bool validDevice = wcsstr(deviceName, L"C985") || wcsstr(deviceName, L"C353");
 
 	if (!validDevice)
 		return true;
@@ -103,8 +98,7 @@ static bool EnumVideoEncoder(vector<DeviceId> &encoders, IBaseFilter *encoder,
 bool VideoEncoder::EnumEncoders(vector<DeviceId> &encoders)
 {
 	encoders.clear();
-	return EnumDevices(KSCATEGORY_ENCODER,
-			   EnumDeviceCallback(EnumVideoEncoder), &encoders, true);
+	return EnumDevices(KSCATEGORY_ENCODER, EnumDeviceCallback(EnumVideoEncoder), &encoders, true);
 }
 
-};
+}; // namespace DShow

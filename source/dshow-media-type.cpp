@@ -29,15 +29,13 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE *pmtTarget, const AM_MEDIA_TYPE *pmtSource)
 	*pmtTarget = *pmtSource;
 
 	if (pmtSource->cbFormat && pmtSource->pbFormat) {
-		pmtTarget->pbFormat =
-			(PBYTE)CoTaskMemAlloc(pmtSource->cbFormat);
+		pmtTarget->pbFormat = (PBYTE)CoTaskMemAlloc(pmtSource->cbFormat);
 
 		if (pmtTarget->pbFormat == nullptr) {
 			pmtTarget->cbFormat = 0;
 			return E_OUTOFMEMORY;
 		} else {
-			memcpy(pmtTarget->pbFormat, pmtSource->pbFormat,
-			       pmtTarget->cbFormat);
+			memcpy(pmtTarget->pbFormat, pmtSource->pbFormat, pmtTarget->cbFormat);
 		}
 	}
 

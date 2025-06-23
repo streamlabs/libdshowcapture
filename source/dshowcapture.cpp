@@ -29,11 +29,11 @@
 
 namespace DShow {
 
-Device::Device(InitGraph initialize) :
-	context(new HDevice),
-	videoDialog(new DeviceDialogBox),
-	crossbarDialog(new DeviceDialogBox),
-	audioDialog(new DeviceDialogBox)
+Device::Device(InitGraph initialize)
+	: context(new HDevice),
+	  videoDialog(new DeviceDialogBox),
+	  crossbarDialog(new DeviceDialogBox),
+	  audioDialog(new DeviceDialogBox)
 {
 	if (initialize == InitGraph::True)
 		context->CreateGraph();
@@ -57,7 +57,7 @@ void Device::GetAccess()
 	context->GetAccess();
 }
 
-void Device::ReleaseAccess() 
+void Device::ReleaseAccess()
 {
 	context->ReleaseAccess();
 }
@@ -66,7 +66,7 @@ bool Device::ResetGraph()
 {
 	context->ReleaseAccess();
 
-	// recreating a device is a cheap and easy way to clear all the filters 
+	// recreating a device is a cheap and easy way to clear all the filters
 	delete context;
 	context = new HDevice;
 
@@ -149,8 +149,7 @@ void Device::OpenDialog(void *hwnd, DialogType type) const
 
 	if (type == DialogType::ConfigVideo) {
 		ptr = context->videoFilter;
-	} else if (type == DialogType::ConfigCrossbar ||
-		   type == DialogType::ConfigCrossbar2) {
+	} else if (type == DialogType::ConfigCrossbar || type == DialogType::ConfigCrossbar2) {
 		if (context == NULL) {
 			Warning(L"Invalid crossbar context");
 			return;
@@ -160,10 +159,7 @@ void Device::OpenDialog(void *hwnd, DialogType type) const
 			return;
 		}
 
-		hr = context->builder->FindInterface(NULL, NULL,
-						     context->videoFilter,
-						     IID_IAMCrossbar,
-						     (void **)&ptr);
+		hr = context->builder->FindInterface(NULL, NULL, context->videoFilter, IID_IAMCrossbar, (void **)&ptr);
 		if (FAILED(hr)) {
 			WarningHR(L"Failed to find crossbar", hr);
 			return;
@@ -173,9 +169,8 @@ void Device::OpenDialog(void *hwnd, DialogType type) const
 			ComQIPtr<IAMCrossbar> xbar(ptr);
 			ComQIPtr<IBaseFilter> filter(xbar);
 
-			hr = context->builder->FindInterface(
-				&LOOK_UPSTREAM_ONLY, NULL, filter,
-				IID_IAMCrossbar, (void **)&ptr);
+			hr = context->builder->FindInterface(&LOOK_UPSTREAM_ONLY, NULL, filter, IID_IAMCrossbar,
+							     (void **)&ptr);
 			if (FAILED(hr)) {
 				WarningHR(L"Failed to find crossbar2", hr);
 				return;
@@ -186,15 +181,13 @@ void Device::OpenDialog(void *hwnd, DialogType type) const
 	}
 
 	if (!ptr) {
-		Warning(L"Could not find filter to open dialog type: %d with",
-			(int)type);
+		Warning(L"Could not find filter to open dialog type: %d with", (int)type);
 		return;
 	}
 
 	if (type == DialogType::ConfigVideo) {
 		videoDialog->Open(ptr);
-	} else if (type == DialogType::ConfigCrossbar ||
-		type == DialogType::ConfigCrossbar2) {
+	} else if (type == DialogType::ConfigCrossbar || type == DialogType::ConfigCrossbar2) {
 		crossbarDialog->Open(ptr);
 	} else if (type == DialogType::ConfigAudio) {
 		audioDialog->Open(ptr);
@@ -208,9 +201,7 @@ void Device::CloseDialog()
 	audioDialog->Close();
 }
 
-static void EnumEncodedVideo(std::vector<VideoDevice> &devices,
-			     const wchar_t *deviceName,
-			     const wchar_t *devicePath,
+static void EnumEncodedVideo(std::vector<VideoDevice> &devices, const wchar_t *deviceName, const wchar_t *devicePath,
 			     const EncodedDevice &info)
 {
 	VideoDevice device;
@@ -232,9 +223,7 @@ static void EnumEncodedVideo(std::vector<VideoDevice> &devices,
 	devices.push_back(device);
 }
 
-static void EnumExceptionVideoDevice(std::vector<VideoDevice> &devices,
-				     IBaseFilter *filter,
-				     const wchar_t *deviceName,
+static void EnumExceptionVideoDevice(std::vector<VideoDevice> &devices, IBaseFilter *filter, const wchar_t *deviceName,
 				     const wchar_t *devicePath)
 {
 	ComPtr<IPin> pin;
@@ -246,8 +235,7 @@ static void EnumExceptionVideoDevice(std::vector<VideoDevice> &devices,
 		EnumEncodedVideo(devices, deviceName, devicePath, Roxio);
 }
 
-static bool EnumVideoDevice(std::vector<VideoDevice> &devices,
-			    IBaseFilter *filter, const wchar_t *deviceName,
+static bool EnumVideoDevice(std::vector<VideoDevice> &devices, IBaseFilter *filter, const wchar_t *deviceName,
 			    const wchar_t *devicePath)
 {
 	ComPtr<IPin> pin;
@@ -255,8 +243,7 @@ static bool EnumVideoDevice(std::vector<VideoDevice> &devices,
 	ComPtr<IBaseFilter> audioFilter;
 	VideoDevice info;
 
-	if (wcsstr(deviceName, L"C875") != nullptr ||
-	    wcsstr(deviceName, L"Prif Streambox") != nullptr ||
+	if (wcsstr(deviceName, L"C875") != nullptr || wcsstr(deviceName, L"Prif Streambox") != nullptr ||
 	    wcsstr(deviceName, L"C835") != nullptr) {
 		EnumEncodedVideo(devices, deviceName, devicePath, AV_LGP);
 		return true;
@@ -271,29 +258,24 @@ static bool EnumVideoDevice(std::vector<VideoDevice> &devices,
 		return true;
 	}
 
-	bool success = GetFilterPin(filter, MEDIATYPE_Video,
-				    PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
+	bool success = GetFilterPin(filter, MEDIATYPE_Video, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
 
 	/* if this device has no standard capture pin, see if it's an
 	 * encoded device, and get its information if so (all encoded devices
 	 * are exception devices pretty much) */
 	if (!success) {
-		EnumExceptionVideoDevice(devices, filter, deviceName,
-					 devicePath);
+		EnumExceptionVideoDevice(devices, filter, deviceName, devicePath);
 		return true;
 	}
 
 	if (!EnumVideoCaps(pin, info.caps))
 		return true;
 
-	info.audioAttached = GetFilterPin(filter, MEDIATYPE_Audio,
-					  PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT,
-					  &audioPin);
+	info.audioAttached = GetFilterPin(filter, MEDIATYPE_Audio, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &audioPin);
 
 	// Fallback: Find a corresponding audio filter for the same device
 	if (!info.audioAttached) {
-		info.separateAudioFilter =
-			GetDeviceAudioFilter(devicePath, &audioFilter);
+		info.separateAudioFilter = GetDeviceAudioFilter(devicePath, &audioFilter);
 		info.audioAttached = info.separateAudioFilter;
 	}
 
@@ -308,19 +290,16 @@ static bool EnumVideoDevice(std::vector<VideoDevice> &devices,
 bool Device::EnumVideoDevices(std::vector<VideoDevice> &devices, bool activate)
 {
 	devices.clear();
-	return EnumDevices(CLSID_VideoInputDeviceCategory,
-			   EnumDeviceCallback(EnumVideoDevice), &devices, activate);
+	return EnumDevices(CLSID_VideoInputDeviceCategory, EnumDeviceCallback(EnumVideoDevice), &devices, activate);
 }
 
-static bool EnumAudioDevice(vector<AudioDevice> &devices, IBaseFilter *filter,
-			    const wchar_t *deviceName,
+static bool EnumAudioDevice(vector<AudioDevice> &devices, IBaseFilter *filter, const wchar_t *deviceName,
 			    const wchar_t *devicePath)
 {
 	ComPtr<IPin> pin;
 	AudioDevice info;
 	if (filter) {
-		bool success = GetFilterPin(filter, MEDIATYPE_Audio,
-					PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
+		bool success = GetFilterPin(filter, MEDIATYPE_Audio, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
 		if (!success)
 			return true;
 
@@ -338,8 +317,7 @@ static bool EnumAudioDevice(vector<AudioDevice> &devices, IBaseFilter *filter,
 bool Device::EnumAudioDevices(vector<AudioDevice> &devices, bool activate)
 {
 	devices.clear();
-	return EnumDevices(CLSID_AudioInputDeviceCategory,
-			   EnumDeviceCallback(EnumAudioDevice), &devices, activate);
+	return EnumDevices(CLSID_AudioInputDeviceCategory, EnumDeviceCallback(EnumAudioDevice), &devices, activate);
 }
 
 }; /* namespace DShow */

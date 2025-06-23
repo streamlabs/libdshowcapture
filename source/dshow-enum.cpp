@@ -25,16 +25,14 @@
 
 #undef DEFINE_GUID
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-	EXTERN_C const GUID DECLSPEC_SELECTANY name = {              \
-		l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
+	EXTERN_C const GUID DECLSPEC_SELECTANY name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
 
 #include "external/IVideoCaptureFilter.h"
 
 namespace DShow {
 using namespace std;
 
-typedef bool (*EnumCapsCallback)(void *param, const AM_MEDIA_TYPE &mt,
-				 const BYTE *data);
+typedef bool (*EnumCapsCallback)(void *param, const AM_MEDIA_TYPE &mt, const BYTE *data);
 
 static void EnumElgatoCaps(IPin *pin, EnumCapsCallback callback, void *param)
 {
@@ -82,8 +80,7 @@ static bool EnumPinCaps(IPin *pin, EnumCapsCallback callback, void *param)
 }
 
 /* Note:  DEVICE_VideoInfo is not to be confused with Device::VideoInfo */
-static bool Get_FORMAT_VideoInfo_Data(VideoInfo &info, const AM_MEDIA_TYPE &mt,
-				      const BYTE *data)
+static bool Get_FORMAT_VideoInfo_Data(VideoInfo &info, const AM_MEDIA_TYPE &mt, const BYTE *data)
 {
 	const VIDEO_STREAM_CONFIG_CAPS *vscc;
 	const VIDEOINFOHEADER *viHeader;
@@ -125,9 +122,7 @@ static bool Get_FORMAT_VideoInfo_Data(VideoInfo &info, const AM_MEDIA_TYPE &mt,
 	return true;
 }
 
-static bool Get_FORMAT_WaveFormatEx_Data(AudioInfo &info,
-					 const AM_MEDIA_TYPE &mt,
-					 const BYTE *data)
+static bool Get_FORMAT_WaveFormatEx_Data(AudioInfo &info, const AM_MEDIA_TYPE &mt, const BYTE *data)
 {
 	const AUDIO_STREAM_CONFIG_CAPS *ascc;
 	const WAVEFORMATEX *wfex;
@@ -165,8 +160,7 @@ struct ClosestVideoData {
 	ClosestVideoData &operator=(ClosestVideoData const &) = delete;
 	ClosestVideoData &operator=(ClosestVideoData &&) = delete;
 
-	inline ClosestVideoData(VideoConfig &config, MediaType &mt)
-		: config(config), mt(mt), bestVal(0), found(false)
+	inline ClosestVideoData(VideoConfig &config, MediaType &mt) : config(config), mt(mt), bestVal(0), found(false)
 	{
 	}
 };
@@ -188,8 +182,7 @@ static inline int GetFormatRating(VideoFormat format)
 	return 15;
 }
 
-static bool ClosestVideoMTCallback(ClosestVideoData &data,
-				   const AM_MEDIA_TYPE &mt, const BYTE *capData)
+static bool ClosestVideoMTCallback(ClosestVideoData &data, const AM_MEDIA_TYPE &mt, const BYTE *capData)
 {
 	VideoInfo info;
 
@@ -204,8 +197,7 @@ static bool ClosestVideoMTCallback(ClosestVideoData &data,
 	VIDEOINFOHEADER *vih = (VIDEOINFOHEADER *)copiedMT->pbFormat;
 	BITMAPINFOHEADER *bmih = GetBitmapInfoHeader(copiedMT);
 
-	if (data.config.internalFormat != VideoFormat::Any &&
-	    data.config.internalFormat != info.format)
+	if (data.config.internalFormat != VideoFormat::Any && data.config.internalFormat != info.format)
 		return true;
 
 	int xVal = 0;
@@ -238,16 +230,13 @@ static bool ClosestVideoMTCallback(ClosestVideoData &data,
 	if (!data.found || data.bestVal > totalVal) {
 		if (xVal == 0) {
 			bmih->biWidth = data.config.cx;
-			ClampToGranularity(bmih->biWidth, info.minCX,
-					   info.granularityCX);
+			ClampToGranularity(bmih->biWidth, info.minCX, info.granularityCX);
 		}
 
 		if (yVal == 0) {
 			LONG cy_abs_clamp = data.config.cy_abs;
-			ClampToGranularity(cy_abs_clamp, info.minCY,
-					   info.granularityCY);
-			bmih->biHeight = data.config.cy_flip ? -cy_abs_clamp
-							     : cy_abs_clamp;
+			ClampToGranularity(cy_abs_clamp, info.minCY, info.granularityCY);
+			bmih->biHeight = data.config.cy_flip ? -cy_abs_clamp : cy_abs_clamp;
 		}
 
 		if (frameVal == 0) {
@@ -267,22 +256,19 @@ static bool ClosestVideoMTCallback(ClosestVideoData &data,
 	return true;
 }
 
-bool GetClosestVideoMediaType(IBaseFilter *filter, VideoConfig &config,
-			      MediaType &mt)
+bool GetClosestVideoMediaType(IBaseFilter *filter, VideoConfig &config, MediaType &mt)
 {
 	ComPtr<IPin> pin;
 	ClosestVideoData data(config, mt);
 	bool success;
 
-	success = GetFilterPin(filter, MEDIATYPE_Video, PIN_CATEGORY_CAPTURE,
-			       PINDIR_OUTPUT, &pin);
+	success = GetFilterPin(filter, MEDIATYPE_Video, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
 	if (!success || pin == NULL) {
 		Error(L"GetClosestVideoMediaType: Could not get pin");
 		return false;
 	}
 
-	success = EnumPinCaps(pin, EnumCapsCallback(ClosestVideoMTCallback),
-			      &data);
+	success = EnumPinCaps(pin, EnumCapsCallback(ClosestVideoMTCallback), &data);
 	if (!success) {
 		Error(L"GetClosestVideoMediaType: Could not enumerate caps");
 		return false;
@@ -300,14 +286,12 @@ struct ClosestAudioData {
 	ClosestAudioData &operator=(ClosestAudioData const &) = delete;
 	ClosestAudioData &operator=(ClosestAudioData &&) = delete;
 
-	inline ClosestAudioData(AudioConfig &config, MediaType &mt)
-		: config(config), mt(mt), bestVal(0), found(false)
+	inline ClosestAudioData(AudioConfig &config, MediaType &mt) : config(config), mt(mt), bestVal(0), found(false)
 	{
 	}
 };
 
-static bool ClosestAudioMTCallback(ClosestAudioData &data,
-				   const AM_MEDIA_TYPE &mt, const BYTE *capData)
+static bool ClosestAudioMTCallback(ClosestAudioData &data, const AM_MEDIA_TYPE &mt, const BYTE *capData)
 {
 	AudioInfo info = {};
 
@@ -321,8 +305,7 @@ static bool ClosestAudioMTCallback(ClosestAudioData &data,
 	MediaType copiedMT = mt;
 	WAVEFORMATEX *wfex = (WAVEFORMATEX *)copiedMT->pbFormat;
 
-	if (data.config.format != AudioFormat::Any &&
-	    data.config.format != info.format)
+	if (data.config.format != AudioFormat::Any && data.config.format != info.format)
 		return true;
 
 	int sampleRateVal = 0;
@@ -351,23 +334,19 @@ static bool ClosestAudioMTCallback(ClosestAudioData &data,
 	if (!data.found || data.bestVal > totalVal) {
 		if (channelsVal == 0) {
 			LONG channels = data.config.channels;
-			ClampToGranularity(channels, info.minChannels,
-					   info.channelsGranularity);
+			ClampToGranularity(channels, info.minChannels, info.channelsGranularity);
 			wfex->nChannels = (WORD)channels;
 
-			wfex->nBlockAlign =
-				wfex->wBitsPerSample * wfex->nChannels / 8;
+			wfex->nBlockAlign = wfex->wBitsPerSample * wfex->nChannels / 8;
 		}
 
 		if (sampleRateVal == 0) {
 			wfex->nSamplesPerSec = data.config.sampleRate;
-			ClampToGranularity((LONG &)wfex->nSamplesPerSec,
-					   info.minSampleRate,
+			ClampToGranularity((LONG &)wfex->nSamplesPerSec, info.minSampleRate,
 					   info.sampleRateGranularity);
 		}
 
-		wfex->nAvgBytesPerSec =
-			wfex->nSamplesPerSec * wfex->nBlockAlign;
+		wfex->nAvgBytesPerSec = wfex->nSamplesPerSec * wfex->nBlockAlign;
 
 		data.mt = copiedMT;
 		data.found = true;
@@ -380,22 +359,19 @@ static bool ClosestAudioMTCallback(ClosestAudioData &data,
 	return true;
 }
 
-bool GetClosestAudioMediaType(IBaseFilter *filter, AudioConfig &config,
-			      MediaType &mt)
+bool GetClosestAudioMediaType(IBaseFilter *filter, AudioConfig &config, MediaType &mt)
 {
 	ComPtr<IPin> pin;
 	ClosestAudioData data(config, mt);
 	bool success;
 
-	success = GetFilterPin(filter, MEDIATYPE_Audio, PIN_CATEGORY_CAPTURE,
-			       PINDIR_OUTPUT, &pin);
+	success = GetFilterPin(filter, MEDIATYPE_Audio, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
 	if (!success || pin == NULL) {
 		Error(L"GetClosestAudioMediaType: Could not get pin");
 		return false;
 	}
 
-	success = EnumPinCaps(pin, EnumCapsCallback(ClosestAudioMTCallback),
-			      &data);
+	success = EnumPinCaps(pin, EnumCapsCallback(ClosestAudioMTCallback), &data);
 	if (!success) {
 		Error(L"GetClosestAudioMediaType: Could not enumerate caps");
 		return false;
@@ -404,8 +380,7 @@ bool GetClosestAudioMediaType(IBaseFilter *filter, AudioConfig &config,
 	return data.found;
 }
 
-static bool EnumVideoCap(vector<VideoInfo> &caps, const AM_MEDIA_TYPE &mt,
-			 const BYTE *data)
+static bool EnumVideoCap(vector<VideoInfo> &caps, const AM_MEDIA_TYPE &mt, const BYTE *data)
 {
 	VideoInfo info;
 
@@ -421,8 +396,7 @@ bool EnumVideoCaps(IPin *pin, vector<VideoInfo> &caps)
 	return EnumPinCaps(pin, EnumCapsCallback(EnumVideoCap), &caps);
 }
 
-static bool EnumAudioCap(vector<AudioInfo> &caps, const AM_MEDIA_TYPE &mt,
-			 const BYTE *data)
+static bool EnumAudioCap(vector<AudioInfo> &caps, const AM_MEDIA_TYPE &mt, const BYTE *data)
 {
 	AudioInfo info;
 
@@ -441,15 +415,13 @@ bool EnumAudioCaps(IPin *pin, vector<AudioInfo> &caps)
 
 static bool decklinkVideoPresent = false;
 
-static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
-		       EnumDeviceCallback callback, void *param, bool activate)
+static bool EnumDevice(const GUID &type, IMoniker *deviceInfo, EnumDeviceCallback callback, void *param, bool activate)
 {
 	ComPtr<IPropertyBag> propertyData;
 	ComPtr<IBaseFilter> filter;
 	HRESULT hr;
 
-	hr = deviceInfo->BindToStorage(0, 0, IID_IPropertyBag,
-				       (void **)&propertyData);
+	hr = deviceInfo->BindToStorage(0, 0, IID_IPropertyBag, (void **)&propertyData);
 	if (FAILED(hr))
 		return true;
 
@@ -467,26 +439,22 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 	 * decklink audio device, but will crash when trying to bind it to
 	 * a filter due to a bug in the drivers */
 	if (deviceName.bstrVal && type == CLSID_AudioInputDeviceCategory &&
-	    wcsstr(deviceName.bstrVal, L"Decklink") != nullptr &&
-	    !decklinkVideoPresent) {
+	    wcsstr(deviceName.bstrVal, L"Decklink") != nullptr && !decklinkVideoPresent) {
 		return true;
 	}
 
 	hr = propertyData->Read(L"DevicePath", &devicePath, NULL);
 
 	if (activate) {
-		hr = deviceInfo->BindToObject(NULL, 0, IID_IBaseFilter,
-						(void **)&filter);
+		hr = deviceInfo->BindToObject(NULL, 0, IID_IBaseFilter, (void **)&filter);
 		if (SUCCEEDED(hr)) {
-			if (!callback(param, filter, deviceName.bstrVal,
-					devicePath.bstrVal))
-					return false;
+			if (!callback(param, filter, deviceName.bstrVal, devicePath.bstrVal))
+				return false;
 		}
 	} else {
 		if (SUCCEEDED(hr)) {
-			if (!callback(param, NULL, deviceName.bstrVal,
-					devicePath.bstrVal))
-					return false;
+			if (!callback(param, NULL, deviceName.bstrVal, devicePath.bstrVal))
+				return false;
 		}
 	}
 
@@ -498,12 +466,10 @@ static bool EnumExceptionVideoDevices(EnumDeviceCallback callback, void *param)
 	ComPtr<IBaseFilter> filter;
 	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_ElgatoVideoCaptureFilter, nullptr,
-			      CLSCTX_INPROC_SERVER, IID_IBaseFilter,
+	hr = CoCreateInstance(CLSID_ElgatoVideoCaptureFilter, nullptr, CLSCTX_INPROC_SERVER, IID_IBaseFilter,
 			      (void **)&filter);
 	if (SUCCEEDED(hr)) {
-		if (!callback(param, filter, L"Elgato Game Capture HD",
-			      L"__elgato"))
+		if (!callback(param, filter, L"Elgato Game Capture HD", L"__elgato"))
 			return false;
 	}
 
@@ -512,9 +478,7 @@ static bool EnumExceptionVideoDevices(EnumDeviceCallback callback, void *param)
 
 static recursive_mutex enumMutex;
 
-static bool CheckForDLCallback(void *unused, IBaseFilter *filter,
-			       const wchar_t *deviceName,
-			       const wchar_t *devicePath)
+static bool CheckForDLCallback(void *unused, IBaseFilter *filter, const wchar_t *deviceName, const wchar_t *devicePath)
 {
 	if (wcsstr(deviceName, L"Decklink") != nullptr) {
 		decklinkVideoPresent = true;
@@ -530,8 +494,7 @@ static bool CheckForDLCallback(void *unused, IBaseFilter *filter,
 static void CheckForDecklinkVideo(bool activate)
 {
 	decklinkVideoPresent = false;
-	EnumDevices(CLSID_VideoInputDeviceCategory, CheckForDLCallback,
-		    nullptr, activate);
+	EnumDevices(CLSID_VideoInputDeviceCategory, CheckForDLCallback, nullptr, activate);
 }
 
 bool EnumDevices(const GUID &type, EnumDeviceCallback callback, void *param, bool activate)
@@ -547,8 +510,7 @@ bool EnumDevices(const GUID &type, EnumDeviceCallback callback, void *param, boo
 		CheckForDecklinkVideo(activate);
 	}
 
-	hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL,
-			      CLSCTX_INPROC_SERVER, IID_ICreateDevEnum,
+	hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum,
 			      (void **)&deviceEnum);
 	if (FAILED(hr)) {
 		WarningHR(L"EnumAudioDevices: Could not create "
@@ -559,8 +521,7 @@ bool EnumDevices(const GUID &type, EnumDeviceCallback callback, void *param, boo
 
 	hr = deviceEnum->CreateClassEnumerator(type, &enumMoniker, 0);
 	if (FAILED(hr)) {
-		WarningHR(L"EnumAudioDevices: CreateClassEnumerator failed",
-			  hr);
+		WarningHR(L"EnumAudioDevices: CreateClassEnumerator failed", hr);
 		return false;
 	}
 

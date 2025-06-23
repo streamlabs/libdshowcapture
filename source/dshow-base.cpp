@@ -35,23 +35,20 @@ using namespace std;
 
 namespace DShow {
 
-bool CreateFilterGraph(IGraphBuilder **pgraph, ICaptureGraphBuilder2 **pbuilder,
-		       IMediaControl **pcontrol)
+bool CreateFilterGraph(IGraphBuilder **pgraph, ICaptureGraphBuilder2 **pbuilder, IMediaControl **pcontrol)
 {
 	ComPtr<IGraphBuilder> graph;
 	ComPtr<ICaptureGraphBuilder2> builder;
 	ComPtr<IMediaControl> control;
 	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
-			      IID_IFilterGraph, (void **)&graph);
+	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IFilterGraph, (void **)&graph);
 	if (FAILED(hr)) {
 		ErrorHR(L"Failed to create IGraphBuilder", hr);
 		return false;
 	}
 
-	hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
-			      CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2,
+	hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2,
 			      (void **)&builder);
 	if (FAILED(hr)) {
 		ErrorHR(L"Failed to create ICaptureGraphBuilder2", hr);
@@ -107,8 +104,7 @@ struct DeviceFilterCallbackInfo {
 	const wchar_t *path;
 };
 
-static bool GetDeviceCallback(DeviceFilterCallbackInfo &info,
-			      IBaseFilter *filter, const wchar_t *name,
+static bool GetDeviceCallback(DeviceFilterCallbackInfo &info, IBaseFilter *filter, const wchar_t *name,
 			      const wchar_t *path)
 {
 	if (info.name && *info.name && wcscmp(name, info.name) != 0)
@@ -123,8 +119,7 @@ static bool GetDeviceCallback(DeviceFilterCallbackInfo &info,
 	return false;
 }
 
-bool GetDeviceFilter(const IID &type, const wchar_t *name, const wchar_t *path,
-		     IBaseFilter **out)
+bool GetDeviceFilter(const IID &type, const wchar_t *name, const wchar_t *path, IBaseFilter **out)
 {
 	DeviceFilterCallbackInfo info;
 	info.name = name;
@@ -212,8 +207,7 @@ static HRESULT GetPinCategory(IPin *pin, GUID &category)
 	if (propertySet == NULL)
 		return E_NOINTERFACE;
 
-	return propertySet->Get(AMPROPSETID_Pin, AMPROPERTY_PIN_CATEGORY, NULL,
-				0, &category, sizeof(GUID), &size);
+	return propertySet->Get(AMPROPSETID_Pin, AMPROPERTY_PIN_CATEGORY, NULL, 0, &category, sizeof(GUID), &size);
 }
 
 static inline bool PinIsCategory(IPin *pin, const GUID &category)
@@ -249,8 +243,7 @@ static inline bool PinNameIs(IPin *pin, const wchar_t *name)
 	return wcscmp(name, pinInfo.achName) == 0;
 }
 
-static inline bool PinMatches(IPin *pin, const GUID &type, const GUID &category,
-			      PIN_DIRECTION &dir)
+static inline bool PinMatches(IPin *pin, const GUID &type, const GUID &category, PIN_DIRECTION &dir)
 {
 	if (!PinHasMajorType(pin, type))
 		return false;
@@ -262,8 +255,7 @@ static inline bool PinMatches(IPin *pin, const GUID &type, const GUID &category,
 	return true;
 }
 
-bool GetFilterPin(IBaseFilter *filter, const GUID &type, const GUID &category,
-		  PIN_DIRECTION dir, IPin **pin)
+bool GetFilterPin(IBaseFilter *filter, const GUID &type, const GUID &category, PIN_DIRECTION dir, IPin **pin)
 {
 	ComPtr<IPin> curPin;
 	ComPtr<IEnumPins> pinsEnum;
@@ -286,8 +278,7 @@ bool GetFilterPin(IBaseFilter *filter, const GUID &type, const GUID &category,
 	return false;
 }
 
-bool GetPinByName(IBaseFilter *filter, PIN_DIRECTION dir, const wchar_t *name,
-		  IPin **pin)
+bool GetPinByName(IBaseFilter *filter, PIN_DIRECTION dir, const wchar_t *name, IPin **pin)
 {
 	ComPtr<IPin> curPin;
 	ComPtr<IEnumPins> pinsEnum;
@@ -322,8 +313,7 @@ bool GetPinByMedium(IBaseFilter *filter, REGPINMEDIUM &medium, IPin **pin)
 	while (pinsEnum->Next(1, &curPin, &num) == S_OK) {
 		REGPINMEDIUM curMedium;
 
-		if (GetPinMedium(curPin, curMedium) &&
-		    memcmp(&medium, &curMedium, sizeof(medium)) == 0) {
+		if (GetPinMedium(curPin, curMedium) && memcmp(&medium, &curMedium, sizeof(medium)) == 0) {
 			*pin = curPin.Detach();
 			return true;
 		}
@@ -332,15 +322,12 @@ bool GetPinByMedium(IBaseFilter *filter, REGPINMEDIUM &medium, IPin **pin)
 	return false;
 }
 
-static bool GetFilterByMediumFromMoniker(IMoniker *moniker,
-					 REGPINMEDIUM &medium,
-					 IBaseFilter **filter)
+static bool GetFilterByMediumFromMoniker(IMoniker *moniker, REGPINMEDIUM &medium, IBaseFilter **filter)
 {
 	ComPtr<IBaseFilter> curFilter;
 	HRESULT hr;
 
-	hr = moniker->BindToObject(nullptr, nullptr, IID_IBaseFilter,
-				   (void **)&curFilter);
+	hr = moniker->BindToObject(nullptr, nullptr, IID_IBaseFilter, (void **)&curFilter);
 	if (SUCCEEDED(hr)) {
 		ComPtr<IPin> pin;
 		if (GetPinByMedium(curFilter, medium, &pin)) {
@@ -348,15 +335,13 @@ static bool GetFilterByMediumFromMoniker(IMoniker *moniker,
 			return true;
 		}
 	} else {
-		WarningHR(L"GetFilterByMediumFromMoniker: BindToObject failed",
-			  hr);
+		WarningHR(L"GetFilterByMediumFromMoniker: BindToObject failed", hr);
 	}
 
 	return false;
 }
 
-bool GetFilterByMedium(const CLSID &id, REGPINMEDIUM &medium,
-		       IBaseFilter **filter)
+bool GetFilterByMedium(const CLSID &id, REGPINMEDIUM &medium, IBaseFilter **filter)
 {
 	ComPtr<ICreateDevEnum> deviceEnum;
 	ComPtr<IEnumMoniker> enumMoniker;
@@ -364,19 +349,16 @@ bool GetFilterByMedium(const CLSID &id, REGPINMEDIUM &medium,
 	DWORD count = 0;
 	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_SystemDeviceEnum, nullptr,
-			      CLSCTX_INPROC_SERVER, IID_ICreateDevEnum,
+	hr = CoCreateInstance(CLSID_SystemDeviceEnum, nullptr, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum,
 			      (void **)&deviceEnum);
 	if (FAILED(hr)) {
-		WarningHR(L"GetFilterByMedium: Failed to create device enum",
-			  hr);
+		WarningHR(L"GetFilterByMedium: Failed to create device enum", hr);
 		return false;
 	}
 
 	hr = deviceEnum->CreateClassEnumerator(id, &enumMoniker, 0);
 	if (hr != S_OK) {
-		WarningHR(L"GetFilterByMedium: Failed to create enum moniker",
-			  hr);
+		WarningHR(L"GetFilterByMedium: Failed to create enum moniker", hr);
 		return false;
 	}
 
@@ -420,8 +402,7 @@ static inline bool PinIsConnected(IPin *pin)
 	return SUCCEEDED(pin->ConnectedTo(&connectedPin));
 }
 
-static bool DirectConnectOutputPin(IFilterGraph *graph, IPin *pin,
-				   IBaseFilter *filterIn)
+static bool DirectConnectOutputPin(IFilterGraph *graph, IPin *pin, IBaseFilter *filterIn)
 {
 	ComPtr<IPin> curPin;
 	ComPtr<IEnumPins> pinsEnum;
@@ -434,8 +415,7 @@ static bool DirectConnectOutputPin(IFilterGraph *graph, IPin *pin,
 
 	while (pinsEnum->Next(1, &curPin, &num) == S_OK) {
 
-		if (PinIsDirection(curPin, PINDIR_INPUT) &&
-		    !PinIsConnected(curPin)) {
+		if (PinIsDirection(curPin, PINDIR_INPUT) && !PinIsConnected(curPin)) {
 			if (graph->ConnectDirect(pin, curPin, nullptr) == S_OK)
 				return true;
 		}
@@ -444,8 +424,7 @@ static bool DirectConnectOutputPin(IFilterGraph *graph, IPin *pin,
 	return false;
 }
 
-bool DirectConnectFilters(IFilterGraph *graph, IBaseFilter *filterOut,
-			  IBaseFilter *filterIn)
+bool DirectConnectFilters(IFilterGraph *graph, IBaseFilter *filterOut, IBaseFilter *filterIn)
 {
 	ComPtr<IPin> curPin;
 	ComPtr<IEnumPins> pinsEnum;
@@ -459,8 +438,7 @@ bool DirectConnectFilters(IFilterGraph *graph, IBaseFilter *filterOut,
 
 	while (pinsEnum->Next(1, &curPin, &num) == S_OK) {
 
-		if (PinIsDirection(curPin, PINDIR_OUTPUT) &&
-		    !PinIsConnected(curPin)) {
+		if (PinIsDirection(curPin, PINDIR_OUTPUT) && !PinIsConnected(curPin)) {
 			if (DirectConnectOutputPin(graph, curPin, filterIn))
 				connected = true;
 		}
@@ -483,11 +461,8 @@ wstring ConvertHRToEnglish(HRESULT hr)
 	LPWSTR buffer = NULL;
 	wstring str;
 
-	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM |
-			       FORMAT_MESSAGE_ALLOCATE_BUFFER |
-			       FORMAT_MESSAGE_IGNORE_INSERTS,
-		       NULL, hr, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-		       (LPTSTR)&buffer, 0, NULL);
+	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
+		       NULL, hr, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPTSTR)&buffer, 0, NULL);
 
 	if (buffer) {
 		str = buffer;
@@ -497,8 +472,7 @@ wstring ConvertHRToEnglish(HRESULT hr)
 	return str;
 }
 
-static HRESULT DevicePathToDeviceInstancePath(const wchar_t *devicePath,
-					      wchar_t *devInstPath, int size)
+static HRESULT DevicePathToDeviceInstancePath(const wchar_t *devicePath, wchar_t *devInstPath, int size)
 {
 	/* Sanity checks */
 	if (!devicePath)
@@ -520,20 +494,17 @@ static HRESULT DevicePathToDeviceInstancePath(const wchar_t *devicePath,
 		if (start == string::npos)
 			return E_FAIL;
 	}
-	parseDevicePath = parseDevicePath.substr(
-		startToken.size(), parseDevicePath.size() - startToken.size());
+	parseDevicePath = parseDevicePath.substr(startToken.size(), parseDevicePath.size() - startToken.size());
 
 	/* Find end position (last occurrence of '#') */
 	wchar_t endToken = '#';
-	size_t end =
-		parseDevicePath.find_last_of(endToken, parseDevicePath.size());
+	size_t end = parseDevicePath.find_last_of(endToken, parseDevicePath.size());
 	if (end == string::npos)
 		return E_FAIL;
 	parseDevicePath = parseDevicePath.substr(0, end);
 
 	/* Replace '#' by '\' */
-	std::replace(parseDevicePath.begin(), parseDevicePath.end(), L'#',
-		     L'\\');
+	std::replace(parseDevicePath.begin(), parseDevicePath.end(), L'#', L'\\');
 
 	/* Set output parameter */
 	StringCchCopyW(devInstPath, size, parseDevicePath.c_str());
@@ -541,8 +512,7 @@ static HRESULT DevicePathToDeviceInstancePath(const wchar_t *devicePath,
 	return S_OK;
 }
 
-static HRESULT GetParentDeviceInstancePath(const wchar_t *devInstPath,
-					   wchar_t *parentDevInstPath, int size)
+static HRESULT GetParentDeviceInstancePath(const wchar_t *devInstPath, wchar_t *parentDevInstPath, int size)
 {
 	/* Init return value */
 	HRESULT hr = E_FAIL;
@@ -552,19 +522,16 @@ static HRESULT GetParentDeviceInstancePath(const wchar_t *devInstPath,
 	if (NULL != hDevInfo) {
 		SP_DEVINFO_DATA did;
 		did.cbSize = sizeof(SP_DEVINFO_DATA);
-		BOOL success = SetupDiOpenDeviceInfo(hDevInfo, devInstPath,
-						     NULL, 0, &did);
+		BOOL success = SetupDiOpenDeviceInfo(hDevInfo, devInstPath, NULL, 0, &did);
 		if (success) {
 
 			/* Get parent device */
 			DEVINST devParent;
-			CONFIGRET ret =
-				CM_Get_Parent(&devParent, did.DevInst, 0);
+			CONFIGRET ret = CM_Get_Parent(&devParent, did.DevInst, 0);
 			if (CR_SUCCESS == ret) {
 
 				/* Get parent device instance path */
-				ret = CM_Get_Device_ID(
-					devParent, parentDevInstPath, size, 0);
+				ret = CM_Get_Device_ID(devParent, parentDevInstPath, size, 0);
 				if (CR_SUCCESS == ret)
 					hr = S_OK;
 			}
@@ -580,13 +547,11 @@ static HRESULT GetParentDeviceInstancePath(const wchar_t *devInstPath,
 	return hr;
 }
 
-static bool IsSameInstPath(const wchar_t *audDevPath,
-			   const wchar_t *vidDevInstPath)
+static bool IsSameInstPath(const wchar_t *audDevPath, const wchar_t *vidDevInstPath)
 {
 	/* Get audio device instance path */
 	wchar_t audDevInstPath[512];
-	HRESULT hr = DevicePathToDeviceInstancePath(audDevPath, audDevInstPath,
-						    _ARRAYSIZE(audDevInstPath));
+	HRESULT hr = DevicePathToDeviceInstancePath(audDevPath, audDevInstPath, _ARRAYSIZE(audDevInstPath));
 
 	/* Compare audio and video device instance path */
 	if (FAILED(hr))
@@ -595,9 +560,7 @@ static bool IsSameInstPath(const wchar_t *audDevPath,
 	return wcscmp(audDevInstPath, vidDevInstPath) == 0;
 }
 
-static HRESULT
-GetAudioCaptureParentDeviceInstancePath(IMoniker *audioCapture,
-					wchar_t *parentDevInstPath, int size)
+static HRESULT GetAudioCaptureParentDeviceInstancePath(IMoniker *audioCapture, wchar_t *parentDevInstPath, int size)
 {
 	/* Sanity checks */
 	if (!audioCapture)
@@ -605,8 +568,7 @@ GetAudioCaptureParentDeviceInstancePath(IMoniker *audioCapture,
 
 	/* Bind to property bag */
 	ComPtr<IPropertyBag> propertyBag;
-	HRESULT hr = audioCapture->BindToStorage(0, 0, IID_IPropertyBag,
-						 (void **)&propertyBag);
+	HRESULT hr = audioCapture->BindToStorage(0, 0, IID_IPropertyBag, (void **)&propertyBag);
 	if (SUCCEEDED(hr)) {
 
 		/* Init variant */
@@ -619,22 +581,16 @@ GetAudioCaptureParentDeviceInstancePath(IMoniker *audioCapture,
 
 			/* Get device path */
 			wchar_t devicePath[512];
-			MMRESULT res = waveInMessage((HWAVEIN)var.iVal,
-						     DRV_QUERYDEVICEINTERFACE,
-						     (DWORD_PTR)devicePath,
+			MMRESULT res = waveInMessage((HWAVEIN)var.iVal, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR)devicePath,
 						     sizeof(devicePath));
 			if (res == MMSYSERR_NOERROR) {
 				/* Get device instance path */
 				wchar_t devInstPath[512];
-				hr = DevicePathToDeviceInstancePath(
-					devicePath, devInstPath,
-					_ARRAYSIZE(devInstPath));
+				hr = DevicePathToDeviceInstancePath(devicePath, devInstPath, _ARRAYSIZE(devInstPath));
 
 				/* Get parent */
 				if (SUCCEEDED(hr))
-					hr = GetParentDeviceInstancePath(
-						devInstPath, parentDevInstPath,
-						size);
+					hr = GetParentDeviceInstancePath(devInstPath, parentDevInstPath, size);
 			}
 		}
 
@@ -645,23 +601,19 @@ GetAudioCaptureParentDeviceInstancePath(IMoniker *audioCapture,
 	return hr;
 }
 
-static bool IsMonikerSameParentInstPath(IMoniker *moniker,
-					const wchar_t *vidDevInstPath)
+static bool IsMonikerSameParentInstPath(IMoniker *moniker, const wchar_t *vidDevInstPath)
 {
 	/* Get video parent device instance path */
 	wchar_t vidParentDevInstPath[512];
-	HRESULT hr = GetParentDeviceInstancePath(
-		vidDevInstPath, vidParentDevInstPath,
-		_ARRAYSIZE(vidParentDevInstPath));
+	HRESULT hr =
+		GetParentDeviceInstancePath(vidDevInstPath, vidParentDevInstPath, _ARRAYSIZE(vidParentDevInstPath));
 
 	if (FAILED(hr))
 		return false;
 
 	/* Get audio parent device instance path */
 	wchar_t audParentDevInstPath[512];
-	hr = GetAudioCaptureParentDeviceInstancePath(
-		moniker, audParentDevInstPath,
-		_ARRAYSIZE(audParentDevInstPath));
+	hr = GetAudioCaptureParentDeviceInstancePath(moniker, audParentDevInstPath, _ARRAYSIZE(audParentDevInstPath));
 
 	if (FAILED(hr))
 		return false;
@@ -672,11 +624,9 @@ static bool IsMonikerSameParentInstPath(IMoniker *moniker,
 
 #define VEN_ID_SIZE 4
 
-static inline bool MatchingStartToken(const wstring &path,
-				      const wstring &start_token)
+static inline bool MatchingStartToken(const wstring &path, const wstring &start_token)
 {
-	return path.find(start_token) == 0 &&
-	       path.size() >= start_token.size() + VEN_ID_SIZE;
+	return path.find(start_token) == 0 && path.size() >= start_token.size() + VEN_ID_SIZE;
 }
 
 static bool IsUncoupledDevice(const wchar_t *vidDevInstPath)
@@ -742,16 +692,13 @@ static bool IsUncoupledDevice(const wchar_t *vidDevInstPath)
 		}
 
 		size_t subsysPos = path.find(pciSubsysToken);
-		size_t subsysIdPos =
-			subsysPos + pciSubsysToken.size() + VEN_ID_SIZE;
+		size_t subsysIdPos = subsysPos + pciSubsysToken.size() + VEN_ID_SIZE;
 		size_t expectedSize = subsysIdPos + VEN_ID_SIZE;
 
 		if (subsysPos != string::npos && path.size() >= expectedSize) {
 			/* Get PCI subsystem vendor ID */
-			const wstring ssid =
-				path.substr(subsysIdPos, VEN_ID_SIZE);
-			for (const wstring &whitelistId :
-			     pciSubsysIdWhitelist) {
+			const wstring ssid = path.substr(subsysIdPos, VEN_ID_SIZE);
+			for (const wstring &whitelistId : pciSubsysIdWhitelist) {
 				if (ssid == whitelistId) {
 					return true;
 				}
@@ -762,8 +709,7 @@ static bool IsUncoupledDevice(const wchar_t *vidDevInstPath)
 	return false;
 }
 
-static HRESULT ReadProperty(IMoniker *moniker, const wchar_t *property,
-			    wchar_t *value, int size)
+static HRESULT ReadProperty(IMoniker *moniker, const wchar_t *property, wchar_t *value, int size)
 {
 	/* Sanity checks */
 	if (!moniker)
@@ -778,8 +724,7 @@ static HRESULT ReadProperty(IMoniker *moniker, const wchar_t *property,
 
 	/* Bind to property bag */
 	ComPtr<IPropertyBag> propertyBag;
-	HRESULT hr = moniker->BindToStorage(0, 0, IID_IPropertyBag,
-					    (void **)&propertyBag);
+	HRESULT hr = moniker->BindToStorage(0, 0, IID_IPropertyBag, (void **)&propertyBag);
 	if (SUCCEEDED(hr)) {
 		/* Initialize variant */
 		VARIANT var;
@@ -800,8 +745,7 @@ static HRESULT ReadProperty(IMoniker *moniker, const wchar_t *property,
 	return hr;
 }
 
-static HRESULT GetFriendlyName(REFCLSID deviceClass, const wchar_t *devPath,
-			       wchar_t *name, int nameSize)
+static HRESULT GetFriendlyName(REFCLSID deviceClass, const wchar_t *devPath, wchar_t *name, int nameSize)
 {
 	/* Sanity checks */
 	if (!devPath)
@@ -811,16 +755,14 @@ static HRESULT GetFriendlyName(REFCLSID deviceClass, const wchar_t *devPath,
 
 	/* Create device enumerator */
 	ComPtr<ICreateDevEnum> createDevEnum;
-	HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL,
-				      CLSCTX_INPROC_SERVER, IID_ICreateDevEnum,
+	HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum,
 				      (void **)&createDevEnum);
 
 	/* Enumerate filters */
 	ComPtr<IEnumMoniker> enumMoniker;
 	if (SUCCEEDED(hr)) {
 		/* returns S_FALSE if no devices are installed */
-		hr = createDevEnum->CreateClassEnumerator(deviceClass,
-							  &enumMoniker, 0);
+		hr = createDevEnum->CreateClassEnumerator(deviceClass, &enumMoniker, 0);
 		if (!enumMoniker)
 			hr = E_FAIL;
 	}
@@ -836,16 +778,13 @@ static HRESULT GetFriendlyName(REFCLSID deviceClass, const wchar_t *devPath,
 
 			/* Get device path from moniker */
 			wchar_t monikerDevPath[512];
-			hr = ReadProperty(moniker, L"DevicePath",
-					  monikerDevPath,
-					  _ARRAYSIZE(monikerDevPath));
+			hr = ReadProperty(moniker, L"DevicePath", monikerDevPath, _ARRAYSIZE(monikerDevPath));
 
 			/* Find desired filter */
 			if (wcscmp(devPath, monikerDevPath) == 0) {
 
 				/* Get friendly name */
-				hr = ReadProperty(moniker, L"FriendlyName",
-						  name, nameSize);
+				hr = ReadProperty(moniker, L"FriendlyName", name, nameSize);
 				return hr;
 			}
 		}
@@ -872,24 +811,20 @@ static bool MatchFriendlyNames(const wchar_t *vidName, const wchar_t *audName)
 
 	/* Remove 'video' from friendly name */
 	size_t posVid;
-	const wstring searchVid[] = {L"(video) ", L"(video)", L"video ",
-				     L"video",    L"hdmi",    L" / multiview"};
+	const wstring searchVid[] = {L"(video) ", L"(video)", L"video ", L"video", L"hdmi", L" / multiview"};
 	for (int i = 0; i < _ARRAYSIZE(searchVid); i++) {
 		const wstring &search = searchVid[i];
-		while ((posVid = strVidName.find(search)) !=
-		       std::string::npos) {
+		while ((posVid = strVidName.find(search)) != std::string::npos) {
 			strVidName.replace(posVid, search.length(), L"");
 		}
 	}
 
 	/* Remove 'audio' from friendly name */
 	size_t posAud;
-	const wstring searchAud[] = {L"(audio) ", L"(audio)", L"audio ",
-				     L"audio"};
+	const wstring searchAud[] = {L"(audio) ", L"(audio)", L"audio ", L"audio"};
 	for (int i = 0; i < _ARRAYSIZE(searchAud); i++) {
 		const wstring &search = searchAud[i];
-		while ((posAud = strAudName.find(search)) !=
-		       std::string::npos) {
+		while ((posAud = strAudName.find(search)) != std::string::npos) {
 			strAudName.replace(posAud, search.length(), L"");
 		}
 	}
@@ -897,15 +832,12 @@ static bool MatchFriendlyNames(const wchar_t *vidName, const wchar_t *audName)
 	return strVidName == strAudName;
 }
 
-static bool GetDeviceAudioFilterInternal(REFCLSID deviceClass,
-					 const wchar_t *vidDevPath,
-					 IBaseFilter **audioCaptureFilter,
-					 bool matchFilterName = false)
+static bool GetDeviceAudioFilterInternal(REFCLSID deviceClass, const wchar_t *vidDevPath,
+					 IBaseFilter **audioCaptureFilter, bool matchFilterName = false)
 {
 	/* Get video device instance path */
 	wchar_t vidDevInstPath[512];
-	HRESULT hr = DevicePathToDeviceInstancePath(vidDevPath, vidDevInstPath,
-						    _ARRAYSIZE(vidDevInstPath));
+	HRESULT hr = DevicePathToDeviceInstancePath(vidDevPath, vidDevInstPath, _ARRAYSIZE(vidDevInstPath));
 	if (FAILED(hr))
 		return false;
 
@@ -918,8 +850,7 @@ static bool GetDeviceAudioFilterInternal(REFCLSID deviceClass,
 	/* Get friendly name */
 	wchar_t vidName[512];
 	if (matchFilterName) {
-		hr = GetFriendlyName(CLSID_VideoInputDeviceCategory, vidDevPath,
-				     vidName, _ARRAYSIZE(vidName));
+		hr = GetFriendlyName(CLSID_VideoInputDeviceCategory, vidDevPath, vidName, _ARRAYSIZE(vidName));
 		if (FAILED(hr))
 			return false;
 	}
@@ -927,16 +858,14 @@ static bool GetDeviceAudioFilterInternal(REFCLSID deviceClass,
 	/* Create device enumerator */
 	ComPtr<ICreateDevEnum> createDevEnum;
 	if (SUCCEEDED(hr))
-		hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL,
-				      CLSCTX_INPROC_SERVER, IID_ICreateDevEnum,
+		hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum,
 				      (void **)&createDevEnum);
 
 	/* Enumerate filters */
 	ComPtr<IEnumMoniker> enumMoniker;
 	if (SUCCEEDED(hr)) {
 		/* returns S_FALSE if no devices are installed */
-		hr = createDevEnum->CreateClassEnumerator(deviceClass,
-							  &enumMoniker, 0);
+		hr = createDevEnum->CreateClassEnumerator(deviceClass, &enumMoniker, 0);
 		if (!enumMoniker)
 			hr = E_FAIL;
 	}
@@ -953,18 +882,15 @@ static bool GetDeviceAudioFilterInternal(REFCLSID deviceClass,
 
 			/* Get device path */
 			wchar_t audDevPath[512];
-			hr = ReadProperty(moniker, L"DevicePath", audDevPath,
-					  _ARRAYSIZE(audDevPath));
+			hr = ReadProperty(moniker, L"DevicePath", audDevPath, _ARRAYSIZE(audDevPath));
 			if (SUCCEEDED(hr)) {
 				/* Skip if it is the video device */
 				if (wcscmp(audDevPath, vidDevPath) == 0)
 					continue;
 
-				samePath = IsSameInstPath(audDevPath,
-							  vidDevInstPath);
+				samePath = IsSameInstPath(audDevPath, vidDevInstPath);
 			} else {
-				samePath = IsMonikerSameParentInstPath(
-					moniker, vidDevInstPath);
+				samePath = IsMonikerSameParentInstPath(moniker, vidDevInstPath);
 			}
 
 			/* Get audio capture filter */
@@ -973,22 +899,14 @@ static bool GetDeviceAudioFilterInternal(REFCLSID deviceClass,
 				bool isSameFilterName = false;
 				if (matchFilterName) {
 					wchar_t audName[512];
-					hr = ReadProperty(moniker,
-							  L"FriendlyName",
-							  audName,
-							  _ARRAYSIZE(audName));
+					hr = ReadProperty(moniker, L"FriendlyName", audName, _ARRAYSIZE(audName));
 					if (SUCCEEDED(hr)) {
-						isSameFilterName =
-							MatchFriendlyNames(
-								vidName,
-								audName);
+						isSameFilterName = MatchFriendlyNames(vidName, audName);
 					}
 				}
 
 				if (!matchFilterName || isSameFilterName) {
-					hr = moniker->BindToObject(
-						0, 0, IID_IBaseFilter,
-						(void **)audioCaptureFilter);
+					hr = moniker->BindToObject(0, 0, IID_IBaseFilter, (void **)audioCaptureFilter);
 					if (SUCCEEDED(hr))
 						return true;
 				}
@@ -999,31 +917,23 @@ static bool GetDeviceAudioFilterInternal(REFCLSID deviceClass,
 	return false;
 }
 
-bool GetDeviceAudioFilter(const wchar_t *vidDevPath,
-			  IBaseFilter **audioCaptureFilter)
+bool GetDeviceAudioFilter(const wchar_t *vidDevPath, IBaseFilter **audioCaptureFilter)
 {
 	/* Search in "Audio capture sources" and match filter name */
-	bool success = GetDeviceAudioFilterInternal(
-		CLSID_AudioInputDeviceCategory, vidDevPath, audioCaptureFilter,
-		true);
+	bool success =
+		GetDeviceAudioFilterInternal(CLSID_AudioInputDeviceCategory, vidDevPath, audioCaptureFilter, true);
 
 	/* Search in "WDM Streaming Capture Devices" and match filter name */
 	if (!success)
-		success = GetDeviceAudioFilterInternal(KSCATEGORY_CAPTURE,
-						       vidDevPath,
-						       audioCaptureFilter,
-						       true);
+		success = GetDeviceAudioFilterInternal(KSCATEGORY_CAPTURE, vidDevPath, audioCaptureFilter, true);
 
 	/* Search in "Audio capture sources" */
 	if (!success)
-		success = GetDeviceAudioFilterInternal(
-			CLSID_AudioInputDeviceCategory, vidDevPath,
-			audioCaptureFilter);
+		success = GetDeviceAudioFilterInternal(CLSID_AudioInputDeviceCategory, vidDevPath, audioCaptureFilter);
 
 	/* Search in "WDM Streaming Capture Devices" */
 	if (!success)
-		success = GetDeviceAudioFilterInternal(
-			KSCATEGORY_CAPTURE, vidDevPath, audioCaptureFilter);
+		success = GetDeviceAudioFilterInternal(KSCATEGORY_CAPTURE, vidDevPath, audioCaptureFilter);
 
 	return success;
 }

@@ -4,22 +4,23 @@
 #include "dshow-base.hpp"
 
 namespace DShow {
-    struct DeviceDialogBox {
-        DeviceDialogBox();
-        ~DeviceDialogBox() = default;
+struct DeviceDialogBox {
+	DeviceDialogBox();
+	~DeviceDialogBox() = default;
 
-        void Open(IUnknown* filter);
-        void Close();
-        DWORD Create();
+	void Open(IUnknown *filter);
+	void Close();
+	DWORD Create();
 
-        static DWORD WINAPI CallCreate(void* param) {
-            DeviceDialogBox* obj = (DeviceDialogBox*) param;
-            return obj->Create();
-        }
+	static DWORD WINAPI CallCreate(void *param)
+	{
+		DeviceDialogBox *obj = (DeviceDialogBox *)param;
+		return obj->Create();
+	}
 
-        ComPtr<IUnknown> deviceFilter;
-        DWORD threadId;
-        HANDLE threadHandle;
-        bool isOpen;
-    };
+	ComPtr<IUnknown> deviceFilter;
+	DWORD threadId;
+	HANDLE threadHandle;
+	bool isOpen;
 };
+}; // namespace DShow

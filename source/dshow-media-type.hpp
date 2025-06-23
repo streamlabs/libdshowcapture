@@ -39,15 +39,9 @@ class MediaType {
 public:
 	inline MediaType() { memset(&type, 0, sizeof(type)); }
 
-	inline MediaType(const MediaType &mt)
-	{
-		CopyMediaType(&type, &mt.type);
-	}
+	inline MediaType(const MediaType &mt) { CopyMediaType(&type, &mt.type); }
 
-	inline MediaType(const AM_MEDIA_TYPE &type_)
-	{
-		CopyMediaType(&type, &type_);
-	}
+	inline MediaType(const AM_MEDIA_TYPE &type_) { CopyMediaType(&type, &type_); }
 
 	inline ~MediaType() { FreeMediaType(type); }
 
@@ -62,8 +56,7 @@ public:
 
 	inline AM_MEDIA_TYPE *Duplicate() const
 	{
-		AM_MEDIA_TYPE *ptr =
-			(AM_MEDIA_TYPE *)CoTaskMemAlloc(sizeof(*ptr));
+		AM_MEDIA_TYPE *ptr = (AM_MEDIA_TYPE *)CoTaskMemAlloc(sizeof(*ptr));
 		if (ptr) {
 			memset(ptr, 0, sizeof(*ptr));
 			CopyMediaType(ptr, &type);
@@ -71,10 +64,7 @@ public:
 		return ptr;
 	}
 
-	inline bool operator==(const AM_MEDIA_TYPE *pMT) const
-	{
-		return pMT == &type;
-	}
+	inline bool operator==(const AM_MEDIA_TYPE *pMT) const { return pMT == &type; }
 
 	inline void operator=(const MediaType &mt)
 	{
@@ -145,10 +135,7 @@ public:
 		ptr = ptr_;
 	}
 
-	inline bool operator==(const AM_MEDIA_TYPE *ptr_) const
-	{
-		return ptr == ptr_;
-	}
+	inline bool operator==(const AM_MEDIA_TYPE *ptr_) const { return ptr == ptr_; }
 };
 
 }; /* namespace DShow */

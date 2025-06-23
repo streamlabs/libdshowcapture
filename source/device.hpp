@@ -73,7 +73,7 @@ struct HDevice {
 	EncodedData encodedVideo;
 	EncodedData encodedAudio;
 
-	mutable std::shared_mutex      access_mutex;
+	mutable std::shared_mutex access_mutex;
 
 	HDevice();
 	~HDevice();
@@ -87,17 +87,14 @@ struct HDevice {
 	void GetAccess();
 	void ReleaseAccess();
 
-	inline void SendToCallback(bool video, unsigned char *data, size_t size,
-				   long long startTime, long long stopTime,
-				   long rotation);
+	inline void SendToCallback(bool video, unsigned char *data, size_t size, long long startTime,
+				   long long stopTime, long rotation);
 
 	void Receive(bool video, IMediaSample *sample);
 
-	bool SetupEncodedVideoCapture(IBaseFilter *filter, VideoConfig &config,
-				      const EncodedDevice &info);
+	bool SetupEncodedVideoCapture(IBaseFilter *filter, VideoConfig &config, const EncodedDevice &info);
 
-	bool SetupExceptionVideoCapture(IBaseFilter *filter,
-					VideoConfig &config);
+	bool SetupExceptionVideoCapture(IBaseFilter *filter, VideoConfig &config);
 
 	bool SetupExceptionAudioCapture(IPin *pin);
 
@@ -111,10 +108,8 @@ struct HDevice {
 
 	bool CreateGraph();
 	bool FindCrossbar(IBaseFilter *filter, IBaseFilter **crossbar);
-	bool ConnectPins(const GUID &category, const GUID &type,
-			 IBaseFilter *filter, IBaseFilter *capture);
-	bool RenderFilters(const GUID &category, const GUID &type,
-			   IBaseFilter *filter, IBaseFilter *capture);
+	bool ConnectPins(const GUID &category, const GUID &type, IBaseFilter *filter, IBaseFilter *capture);
+	bool RenderFilters(const GUID &category, const GUID &type, IBaseFilter *filter, IBaseFilter *capture);
 	void SetAudioBuffering(int bufferingMs);
 	bool ConnectFilters();
 	void DisconnectFilters();

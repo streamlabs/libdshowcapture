@@ -55,8 +55,7 @@ class OutputPin : public IPin, public IAMStreamConfig, public IKsPropertySet {
 
 public:
 	OutputPin(OutputFilter *filter);
-	OutputPin(OutputFilter *filter, VideoFormat format, int cx, int cy,
-		  long long interval);
+	OutputPin(OutputFilter *filter, VideoFormat format, int cx, int cy, long long interval);
 	virtual ~OutputPin();
 
 	STDMETHODIMP QueryInterface(REFIID riid, void **ppv);
@@ -65,8 +64,7 @@ public:
 
 	// IPin methods
 	STDMETHODIMP Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt);
-	STDMETHODIMP ReceiveConnection(IPin *connector,
-				       const AM_MEDIA_TYPE *pmt);
+	STDMETHODIMP ReceiveConnection(IPin *connector, const AM_MEDIA_TYPE *pmt);
 	STDMETHODIMP Disconnect();
 	STDMETHODIMP ConnectedTo(IPin **pPin);
 	STDMETHODIMP ConnectionMediaType(AM_MEDIA_TYPE *pmt);
@@ -80,48 +78,35 @@ public:
 
 	STDMETHODIMP BeginFlush();
 	STDMETHODIMP EndFlush();
-	STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop,
-				double dRate);
+	STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
 	// IAMStreamConfig methods
 	STDMETHODIMP GetFormat(AM_MEDIA_TYPE **ppmt) override;
-	STDMETHODIMP GetNumberOfCapabilities(int *piCount,
-					     int *piSize) override;
-	STDMETHODIMP GetStreamCaps(int iIndex, AM_MEDIA_TYPE **ppmt,
-				   BYTE *pSCC) override;
+	STDMETHODIMP GetNumberOfCapabilities(int *piCount, int *piSize) override;
+	STDMETHODIMP GetStreamCaps(int iIndex, AM_MEDIA_TYPE **ppmt, BYTE *pSCC) override;
 	STDMETHODIMP SetFormat(AM_MEDIA_TYPE *pmt) override;
 
 	// IKsPropertySet methods
-	STDMETHODIMP Set(REFGUID guidPropSet, DWORD dwID, void *pInstanceData,
-			 DWORD cbInstanceData, void *pPropData,
+	STDMETHODIMP Set(REFGUID guidPropSet, DWORD dwID, void *pInstanceData, DWORD cbInstanceData, void *pPropData,
 			 DWORD cbPropData) override;
 
-	STDMETHODIMP Get(REFGUID guidPropSet, DWORD dwPropID,
-			 void *pInstanceData, DWORD cbInstanceData,
-			 void *pPropData, DWORD cbPropData,
-			 DWORD *pcbReturned) override;
+	STDMETHODIMP Get(REFGUID guidPropSet, DWORD dwPropID, void *pInstanceData, DWORD cbInstanceData,
+			 void *pPropData, DWORD cbPropData, DWORD *pcbReturned) override;
 
-	STDMETHODIMP QuerySupported(REFGUID guidPropSet, DWORD dwPropID,
-				    DWORD *pTypeSupport) override;
+	STDMETHODIMP QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport) override;
 
 	// Other methods
-	inline bool ReallocateBuffers()
-	{
-		return !!connectedPin ? AllocateBuffers(connectedPin) : false;
-	}
+	inline bool ReallocateBuffers() { return !!connectedPin ? AllocateBuffers(connectedPin) : false; }
 
 	inline VideoFormat GetVideoFormat() const { return curVFormat; }
 	inline int GetCX() const { return curCX; }
 	inline int GetCY() const { return curCY; }
 	inline long long GetInterval() const { return curInterval; }
 
-	void AddVideoFormat(VideoFormat format, int cx, int cy,
-			    long long interval);
-	bool SetVideoFormat(VideoFormat format, int cx, int cy,
-			    long long interval);
+	void AddVideoFormat(VideoFormat format, int cx, int cy, long long interval);
+	bool SetVideoFormat(VideoFormat format, int cx, int cy, long long interval);
 
-	void Send(unsigned char *data[DSHOW_MAX_PLANES],
-		  size_t linesize[DSHOW_MAX_PLANES], long long timestampStart,
+	void Send(unsigned char *data[DSHOW_MAX_PLANES], size_t linesize[DSHOW_MAX_PLANES], long long timestampStart,
 		  long long timestampEnd);
 
 	bool LockSampleData(unsigned char **ptr);
@@ -177,40 +162,30 @@ public:
 
 	inline bool ReallocateBuffers() { return pin->ReallocateBuffers(); }
 
-	inline VideoFormat GetVideoFormat() const
-	{
-		return pin->GetVideoFormat();
-	}
+	inline VideoFormat GetVideoFormat() const { return pin->GetVideoFormat(); }
 
 	inline int GetCX() const { return pin->GetCX(); }
 	inline int GetCY() const { return pin->GetCY(); }
 	inline long long GetInterval() const { return pin->GetInterval(); }
 
-	inline void AddVideoFormat(VideoFormat format, int cx, int cy,
-				   long long interval)
+	inline void AddVideoFormat(VideoFormat format, int cx, int cy, long long interval)
 	{
 		pin->AddVideoFormat(format, cx, cy, interval);
 	}
-	inline bool SetVideoFormat(VideoFormat format, int cx, int cy,
-				   long long interval)
+	inline bool SetVideoFormat(VideoFormat format, int cx, int cy, long long interval)
 	{
 		return pin->SetVideoFormat(format, cx, cy, interval);
 	}
 
-	inline void Send(unsigned char *data[DSHOW_MAX_PLANES],
-			 size_t linesize[DSHOW_MAX_PLANES],
+	inline void Send(unsigned char *data[DSHOW_MAX_PLANES], size_t linesize[DSHOW_MAX_PLANES],
 			 long long timestampStart, long long timestampEnd)
 	{
 		pin->Send(data, linesize, timestampStart, timestampEnd);
 	}
 
-	inline bool LockSampleData(unsigned char **ptr)
-	{
-		return pin->LockSampleData(ptr);
-	}
+	inline bool LockSampleData(unsigned char **ptr) { return pin->LockSampleData(ptr); }
 
-	inline void UnlockSampleData(long long timestampStart,
-				     long long timestampEnd)
+	inline void UnlockSampleData(long long timestampStart, long long timestampEnd)
 	{
 		pin->UnlockSampleData(timestampStart, timestampEnd);
 	}
@@ -252,8 +227,7 @@ public:
 	STDMETHODIMP_(ULONG) Release();
 
 	// IEnumMediaTypes
-	STDMETHODIMP Next(ULONG cMediaTypes, AM_MEDIA_TYPE **ppMediaTypes,
-			  ULONG *pcFetched);
+	STDMETHODIMP Next(ULONG cMediaTypes, AM_MEDIA_TYPE **ppMediaTypes, ULONG *pcFetched);
 	STDMETHODIMP Skip(ULONG cMediaTypes);
 	STDMETHODIMP Reset();
 	STDMETHODIMP Clone(IEnumMediaTypes **ppEnum);

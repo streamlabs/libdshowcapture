@@ -30,20 +30,17 @@ namespace DShow {
 
 bool IsVendorVideoHDR(IKsPropertySet *propertySet)
 {
-	EGAVDeviceProperties properties(
-		propertySet, EGAVDeviceProperties::DeviceType::GC4K60SPlus);
+	EGAVDeviceProperties properties(propertySet, EGAVDeviceProperties::DeviceType::GC4K60SPlus);
 	bool isHDR = false;
 	return SUCCEEDED(properties.IsVideoHDR(isHDR)) ? isHDR : false;
 }
 
 void SetVendorVideoFormat(IKsPropertySet *propertySet, bool hevcTrueAvcFalse)
 {
-	EGAVDeviceProperties properties(
-		propertySet, EGAVDeviceProperties::DeviceType::GC4K60SPlus);
+	EGAVDeviceProperties properties(propertySet, EGAVDeviceProperties::DeviceType::GC4K60SPlus);
 	const HRESULT hr = properties.SetEncoderType(hevcTrueAvcFalse);
 	if (SUCCEEDED(hr)) {
-		Info(L"Elgato GC4K60SPlus encoder type=%ls",
-		     hevcTrueAvcFalse ? L"HEVC" : L"AVC");
+		Info(L"Elgato GC4K60SPlus encoder type=%ls", hevcTrueAvcFalse ? L"HEVC" : L"AVC");
 	}
 }
 
@@ -71,9 +68,8 @@ static void SetTonemapperAvermedia(IKsPropertySet *propertySet, bool enable)
 	};
 	KSPROPERTY_AVER_HW_HDR2SDR data{};
 	data.Enable = enable;
-	const HRESULT hr = propertySet->Set(
-		KSPROPSETID_AVER_HDR_PROPERTY, 2, &data.Enable,
-		sizeof(data) - sizeof(data.Property), &data, sizeof(data));
+	const HRESULT hr = propertySet->Set(KSPROPSETID_AVER_HDR_PROPERTY, 2, &data.Enable,
+					    sizeof(data) - sizeof(data.Property), &data, sizeof(data));
 	if (SUCCEEDED(hr))
 		Info(L"AVerMedia tonemapper enable=%lu", data.Enable);
 }
@@ -138,26 +134,22 @@ static bool SetTonemapperAvermedia2(IBaseFilter *filter, bool enable)
 
 	ExtensionProp.Property.Set = GUID_GC553;
 	ExtensionProp.Property.Id = nId;
-	ExtensionProp.Property.Flags = KSPROPERTY_TYPE_GET |
-				       KSPROPERTY_TYPE_TOPOLOGY;
+	ExtensionProp.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
 
 	char pData[20];
 
 	ULONG ulBytesReturned;
-	hr = spKsControl->KsProperty(&ExtensionProp.Property,
-				     sizeof(ExtensionProp), pData,
-				     sizeof(pData), &ulBytesReturned);
+	hr = spKsControl->KsProperty(&ExtensionProp.Property, sizeof(ExtensionProp), pData, sizeof(pData),
+				     &ulBytesReturned);
 	if (FAILED(hr) || (ulBytesReturned < 18))
 		return false;
 
 	pData[15] = 0x02;
 	pData[17] = enable;
 
-	ExtensionProp.Property.Flags = KSPROPERTY_TYPE_SET |
-				       KSPROPERTY_TYPE_TOPOLOGY;
-	hr = spKsControl->KsProperty(&ExtensionProp.Property,
-				     sizeof(ExtensionProp), pData,
-				     sizeof(pData), &ulBytesReturned);
+	ExtensionProp.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+	hr = spKsControl->KsProperty(&ExtensionProp.Property, sizeof(ExtensionProp), pData, sizeof(pData),
+				     &ulBytesReturned);
 	const bool succeeded = SUCCEEDED(hr);
 	if (succeeded)
 		Info(L"AVerMedia GC553 tonemapper enable=%d", (int)enable);
@@ -167,21 +159,18 @@ static bool SetTonemapperAvermedia2(IBaseFilter *filter, bool enable)
 
 static void SetTonemapperElgato(IKsPropertySet *propertySet, bool enable)
 {
-	EGAVDeviceProperties properties(
-		propertySet, EGAVDeviceProperties::DeviceType::GC4K60ProMK2);
+	EGAVDeviceProperties properties(propertySet, EGAVDeviceProperties::DeviceType::GC4K60ProMK2);
 	const HRESULT hr = properties.SetHDRTonemapping(enable);
 	if (SUCCEEDED(hr)) {
 		Info(L"Elgato GC4K60ProMK2 tonemapper enable=%d", (int)enable);
 	} else {
 		for (const EGAVDeviceID &deviceID : GetElgatoUVCDeviceIDs()) {
-			std::shared_ptr<EGAVHIDInterface> hid =
-				CreateEGAVHIDInterface();
+			std::shared_ptr<EGAVHIDInterface> hid = CreateEGAVHIDInterface();
 			if (hid->InitHIDInterface(deviceID).Succeeded()) {
-				ElgatoUVCDevice device(
-					hid, IsNewDeviceType(deviceID));
+				ElgatoUVCDevice device(hid, IsNewDeviceType(deviceID));
 				device.SetHDRTonemappingEnabled(enable);
-				Info(L"Elgato UVC device (PID = 0x%04X) tonemapper enable=%d",
-				     deviceID.productID, (int)enable);
+				Info(L"Elgato UVC device (PID = 0x%04X) tonemapper enable=%d", deviceID.productID,
+				     (int)enable);
 				hid->DeinitHIDInterface();
 			}
 		}
@@ -191,8 +180,7 @@ static void SetTonemapperElgato(IKsPropertySet *propertySet, bool enable)
 void SetVendorTonemapperUsage(IBaseFilter *filter, bool enable)
 {
 	if (filter) {
-		ComPtr<IKsPropertySet> propertySet =
-			ComQIPtr<IKsPropertySet>(filter);
+		ComPtr<IKsPropertySet> propertySet = ComQIPtr<IKsPropertySet>(filter);
 		if (propertySet) {
 			SetTonemapperAvermedia(propertySet, enable);
 			SetTonemapperAvermedia2(filter, enable);

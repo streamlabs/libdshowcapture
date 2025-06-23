@@ -30,8 +30,7 @@ namespace DShow {
 
 /* device-vendor.cpp API */
 extern bool IsVendorVideoHDR(IKsPropertySet *propertySet);
-extern void SetVendorVideoFormat(IKsPropertySet *propertySet,
-				 bool hevcTrueAvcFalse);
+extern void SetVendorVideoFormat(IKsPropertySet *propertySet, bool hevcTrueAvcFalse);
 extern void SetVendorTonemapperUsage(IBaseFilter *filter, bool enable);
 
 bool SetRocketEnabled(IBaseFilter *encoder, bool enable);
@@ -79,7 +78,7 @@ bool HDevice::EnsureActive(const wchar_t *func)
 	return true;
 }
 
-bool HDevice::EnsureInactive(const wchar_t* func)
+bool HDevice::EnsureInactive(const wchar_t *func)
 {
 	if (active) {
 		Error(L"%s: cannot be used while active", func);
@@ -99,19 +98,16 @@ void HDevice::ReleaseAccess()
 	access_mutex.unlock();
 }
 
-inline void HDevice::SendToCallback(bool video, unsigned char *data,
-				    size_t size, long long startTime,
+inline void HDevice::SendToCallback(bool video, unsigned char *data, size_t size, long long startTime,
 				    long long stopTime, long rotation)
 {
 	if (!size)
 		return;
 
 	if (video)
-		videoConfig.callback(videoConfig, data, size, startTime,
-				     stopTime, rotation);
+		videoConfig.callback(videoConfig, data, size, startTime, stopTime, rotation);
 	else
-		audioConfig.callback(audioConfig, data, size, startTime,
-				     stopTime);
+		audioConfig.callback(audioConfig, data, size, startTime, stopTime);
 }
 
 void HDevice::Receive(bool isVideo, IMediaSample *sample)
@@ -119,13 +115,12 @@ void HDevice::Receive(bool isVideo, IMediaSample *sample)
 	BYTE *ptr;
 	MediaTypePtr mt;
 	long roll = 0;
-	bool encoded = isVideo ? ((int)videoConfig.format >= 400)
-			       : ((int)audioConfig.format >= 200);
+	bool encoded = isVideo ? ((int)videoConfig.format >= 400) : ((int)audioConfig.format >= 200);
 
 	if (!sample)
 		return;
 
-	if( !access_mutex.try_lock_shared() )
+	if (!access_mutex.try_lock_shared())
 		return;
 
 	if (isVideo ? !videoConfig.callback : !audioConfig.callback)
@@ -185,17 +180,15 @@ void HDevice::Receive(bool isVideo, IMediaSample *sample)
 		/* packets that have time are the first packet in a group of
 		 * segments */
 		if (hasTime) {
-			SendToCallback(isVideo, data.bytes.data(),
-				       data.bytes.size(), data.lastStartTime,
+			SendToCallback(isVideo, data.bytes.data(), data.bytes.size(), data.lastStartTime,
 				       data.lastStopTime, roll);
 
 			data.bytes.resize(0);
 			data.lastStartTime = startTime;
-			data.lastStopTime  = stopTime;
+			data.lastStopTime = stopTime;
 		}
 
-			data.bytes.insert(data.bytes.end(), (unsigned char *)ptr,
-							  (unsigned char *)ptr + size);
+		data.bytes.insert(data.bytes.end(), (unsigned char *)ptr, (unsigned char *)ptr + size);
 
 	} else if (hasTime) {
 		SendToCallback(isVideo, ptr, size, startTime, stopTime, roll);
@@ -226,8 +219,7 @@ void HDevice::ConvertVideoSettings()
 
 void HDevice::ConvertAudioSettings()
 {
-	WAVEFORMATEX *wfex =
-		reinterpret_cast<WAVEFORMATEX *>(audioMediaType->pbFormat);
+	WAVEFORMATEX *wfex = reinterpret_cast<WAVEFORMATEX *>(audioMediaType->pbFormat);
 
 	Debug(L"Audio media type changed");
 
@@ -250,8 +242,7 @@ void HDevice::ConvertAudioSettings()
 
 #define HD_PVR1_NAME L"Hauppauge HD PVR Capture"
 
-bool HDevice::SetupExceptionVideoCapture(IBaseFilter *filter,
-					 VideoConfig &config)
+bool HDevice::SetupExceptionVideoCapture(IBaseFilter *filter, VideoConfig &config)
 {
 	ComPtr<IPin> pin;
 
@@ -290,8 +281,7 @@ bool HDevice::SetupVideoCapture(IBaseFilter *filter, VideoConfig &config)
 	bool success;
 
 	if (config.name.find(L"C875") != std::string::npos ||
-	    config.name.find(L"Prif Streambox") != std::string::npos ||
-	    config.name.find(L"C835") != std::string::npos)
+	    config.name.find(L"Prif Streambox") != std::string::npos || config.name.find(L"C835") != std::string::npos)
 		return SetupEncodedVideoCapture(filter, config, AV_LGP);
 
 	else if (config.name.find(L"IT9910") != std::string::npos)
@@ -300,11 +290,9 @@ bool HDevice::SetupVideoCapture(IBaseFilter *filter, VideoConfig &config)
 	else if (config.name.find(HD_PVR1_NAME) != std::string::npos)
 		return SetupEncodedVideoCapture(filter, config, HD_PVR1);
 
-	rotatableDevice = videoConfig.name.find(L"StreamCam") !=
-			  std::string::npos;
+	rotatableDevice = videoConfig.name.find(L"StreamCam") != std::string::npos;
 
-	success = GetFilterPin(filter, MEDIATYPE_Video, PIN_CATEGORY_CAPTURE,
-			       PINDIR_OUTPUT, &pin);
+	success = GetFilterPin(filter, MEDIATYPE_Video, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
 	if (!success) {
 		if (SetupExceptionVideoCapture(filter, config)) {
 			return true;
@@ -357,7 +345,9 @@ bool HDevice::SetupVideoCapture(IBaseFilter *filter, VideoConfig &config)
 	ConvertVideoSettings();
 
 	PinCaptureInfo info;
-	info.callback = [this](IMediaSample *s) { Receive(true, s); };
+	info.callback = [this](IMediaSample *s) {
+		Receive(true, s);
+	};
 	info.expectedMajorType = videoMediaType->majortype;
 
 	/* attempt to force intermediary filters for these types */
@@ -388,8 +378,7 @@ bool HDevice::SetVideoConfig(VideoConfig *config)
 {
 	ComPtr<IBaseFilter> filter;
 
-	if (!EnsureInitialized(L"SetVideoConfig") ||
-	    !EnsureInactive(L"SetVideoConfig"))
+	if (!EnsureInitialized(L"SetVideoConfig") || !EnsureInactive(L"SetVideoConfig"))
 		return false;
 
 	videoMediaType = NULL;
@@ -406,12 +395,10 @@ bool HDevice::SetVideoConfig(VideoConfig *config)
 		return false;
 	}
 
-	bool success = GetDeviceFilter(CLSID_VideoInputDeviceCategory,
-				       config->name.c_str(),
-				       config->path.c_str(), &filter);
+	bool success =
+		GetDeviceFilter(CLSID_VideoInputDeviceCategory, config->name.c_str(), config->path.c_str(), &filter);
 	if (!success) {
-		Error(L"Video device '%s': %s not found", config->name.c_str(),
-		      config->path.c_str());
+		Error(L"Video device '%s': %s not found", config->name.c_str(), config->path.c_str());
 		return false;
 	}
 
@@ -458,8 +445,7 @@ bool HDevice::SetupExceptionAudioCapture(IPin *pin)
 
 	enumMediaTypes->Reset();
 
-	if (enumMediaTypes->Next(1, &mt, &count) == S_OK &&
-	    mt->formattype == FORMAT_WaveFormatEx) {
+	if (enumMediaTypes->Next(1, &mt, &count) == S_OK && mt->formattype == FORMAT_WaveFormatEx) {
 		audioMediaType = mt;
 		return true;
 	}
@@ -484,8 +470,7 @@ bool HDevice::SetupAudioCapture(IBaseFilter *filter, AudioConfig &config)
 	bool success;
 	HRESULT hr;
 
-	success = GetFilterPin(filter, MEDIATYPE_Audio, PIN_CATEGORY_CAPTURE,
-			       PINDIR_OUTPUT, &pin);
+	success = GetFilterPin(filter, MEDIATYPE_Audio, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
 	if (!success) {
 		Error(L"Could not get audio pin");
 		return false;
@@ -498,8 +483,7 @@ bool HDevice::SetupAudioCapture(IBaseFilter *filter, AudioConfig &config)
 
 		if (pinConfig && SUCCEEDED(pinConfig->GetFormat(&defaultMT))) {
 			if (is24BitAudio(defaultMT)) {
-				WAVEFORMATEX *wfex =
-					(WAVEFORMATEX *)defaultMT->pbFormat;
+				WAVEFORMATEX *wfex = (WAVEFORMATEX *)defaultMT->pbFormat;
 				config.sampleRate = wfex->nSamplesPerSec;
 				config.channels = wfex->nChannels;
 				config.format = AudioFormat::Wave16bit;
@@ -535,7 +519,9 @@ bool HDevice::SetupAudioCapture(IBaseFilter *filter, AudioConfig &config)
 	ConvertAudioSettings();
 
 	PinCaptureInfo info;
-	info.callback = [this](IMediaSample *s) { Receive(false, s); };
+	info.callback = [this](IMediaSample *s) {
+		Receive(false, s);
+	};
 	info.expectedMajorType = audioMediaType->majortype;
 	info.expectedSubType = audioMediaType->subtype;
 
@@ -561,8 +547,7 @@ bool HDevice::SetupAudioOutput(IBaseFilter *filter, AudioConfig &config)
 		clsID = &CLSID_DSoundRender;
 	}
 
-	hr = CoCreateInstance(*clsID, nullptr, CLSCTX_INPROC_SERVER,
-			      IID_IBaseFilter, (void **)&outputFilter);
+	hr = CoCreateInstance(*clsID, nullptr, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void **)&outputFilter);
 	if (FAILED(hr)) {
 		ErrorHR(L"Failed to create audio sound output filter", hr);
 		return false;
@@ -581,8 +566,7 @@ bool HDevice::SetAudioConfig(AudioConfig *config)
 {
 	ComPtr<IBaseFilter> filter;
 
-	if (!EnsureInitialized(L"SetAudioConfig") ||
-	    !EnsureInactive(L"SetAudioConfig"))
+	if (!EnsureInitialized(L"SetAudioConfig") || !EnsureInactive(L"SetAudioConfig"))
 		return false;
 
 	if (!audioConfig.useVideoDevice)
@@ -597,8 +581,8 @@ bool HDevice::SetAudioConfig(AudioConfig *config)
 	if (!config)
 		return true;
 
-	if (!config->useVideoDevice && !config->useSeparateAudioFilter &&
-	    config->name.empty() && config->path.empty()) {
+	if (!config->useVideoDevice && !config->useSeparateAudioFilter && config->name.empty() &&
+	    config->path.empty()) {
 		Error(L"No audio device name or path specified");
 		return false;
 	}
@@ -612,21 +596,17 @@ bool HDevice::SetAudioConfig(AudioConfig *config)
 
 		filter = videoFilter;
 	} else if (config->useSeparateAudioFilter) {
-		bool success =
-			GetDeviceAudioFilter(videoConfig.path.c_str(), &filter);
+		bool success = GetDeviceAudioFilter(videoConfig.path.c_str(), &filter);
 		if (!success) {
-			Error(L"Corresponding audio device for '%s' not found",
-			      videoConfig.path.c_str());
+			Error(L"Corresponding audio device for '%s' not found", videoConfig.path.c_str());
 			return false;
 		}
 
 	} else {
-		bool success = GetDeviceFilter(CLSID_AudioInputDeviceCategory,
-					       config->name.c_str(),
+		bool success = GetDeviceFilter(CLSID_AudioInputDeviceCategory, config->name.c_str(),
 					       config->path.c_str(), &filter);
 		if (!success) {
-			Error(L"Audio device '%s': %s not found",
-			      config->name.c_str(), config->path.c_str());
+			Error(L"Audio device '%s': %s not found", config->name.c_str(), config->path.c_str());
 			return false;
 		}
 	}
@@ -667,8 +647,7 @@ bool HDevice::FindCrossbar(IBaseFilter *filter, IBaseFilter **crossbar)
 	REGPINMEDIUM medium;
 	HRESULT hr;
 
-	hr = builder->FindInterface(NULL, NULL, filter, IID_IAMCrossbar,
-				    (void **)crossbar);
+	hr = builder->FindInterface(NULL, NULL, filter, IID_IAMCrossbar, (void **)crossbar);
 	if (SUCCEEDED(hr))
 		return true;
 
@@ -683,8 +662,7 @@ bool HDevice::FindCrossbar(IBaseFilter *filter, IBaseFilter **crossbar)
 	return true;
 }
 
-bool HDevice::ConnectPins(const GUID &category, const GUID &type,
-			  IBaseFilter *filter, IBaseFilter *capture)
+bool HDevice::ConnectPins(const GUID &category, const GUID &type, IBaseFilter *filter, IBaseFilter *capture)
 {
 	HRESULT hr;
 	ComPtr<IBaseFilter> crossbar;
@@ -692,8 +670,7 @@ bool HDevice::ConnectPins(const GUID &category, const GUID &type,
 	ComPtr<IPin> capturePin;
 	bool connectCrossbar = !encodedDevice && type == MEDIATYPE_Video;
 
-	if (!EnsureInitialized(L"HDevice::ConnectPins") ||
-	    !EnsureInactive(L"HDevice::ConnectPins"))
+	if (!EnsureInitialized(L"HDevice::ConnectPins") || !EnsureInactive(L"HDevice::ConnectPins"))
 		return false;
 
 	if (connectCrossbar && FindCrossbar(filter, &crossbar)) {
@@ -723,13 +700,11 @@ bool HDevice::ConnectPins(const GUID &category, const GUID &type,
 	return true;
 }
 
-bool HDevice::RenderFilters(const GUID &category, const GUID &type,
-			    IBaseFilter *filter, IBaseFilter *capture)
+bool HDevice::RenderFilters(const GUID &category, const GUID &type, IBaseFilter *filter, IBaseFilter *capture)
 {
 	HRESULT hr;
 
-	if (!EnsureInitialized(L"HDevice::RenderFilters") ||
-	    !EnsureInactive(L"HDevice::RenderFilters"))
+	if (!EnsureInitialized(L"HDevice::RenderFilters") || !EnsureInactive(L"HDevice::RenderFilters"))
 		return false;
 
 	hr = builder->RenderStream(&category, &type, filter, NULL, capture);
@@ -744,8 +719,7 @@ bool HDevice::RenderFilters(const GUID &category, const GUID &type,
 void HDevice::SetAudioBuffering(int bufferingMs)
 {
 	ComPtr<IPin> pin;
-	bool success = GetFilterPin(audioFilter, MEDIATYPE_Audio,
-				    PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
+	bool success = GetFilterPin(audioFilter, MEDIATYPE_Audio, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pin);
 	if (!success)
 		return;
 
@@ -784,46 +758,35 @@ bool HDevice::ConnectFilters()
 {
 	bool success = true;
 
-	if (!EnsureInitialized(L"ConnectFilters") ||
-	    !EnsureInactive(L"ConnectFilters"))
+	if (!EnsureInitialized(L"ConnectFilters") || !EnsureInactive(L"ConnectFilters"))
 		return false;
 
 	if (videoCapture != NULL) {
 		/* use hardware tonemapper for narrow format (SDR), not wide (HDR) */
-		const bool enable_tonemapper = videoConfig.format !=
-					       VideoFormat::P010;
+		const bool enable_tonemapper = videoConfig.format != VideoFormat::P010;
 		SetVendorTonemapperUsage(videoFilter, enable_tonemapper);
 
-		success = ConnectPins(PIN_CATEGORY_CAPTURE, MEDIATYPE_Video,
-				      videoFilter, videoCapture);
+		success = ConnectPins(PIN_CATEGORY_CAPTURE, MEDIATYPE_Video, videoFilter, videoCapture);
 		if (!success) {
-			success = RenderFilters(PIN_CATEGORY_CAPTURE,
-						MEDIATYPE_Video, videoFilter,
-						videoCapture);
+			success = RenderFilters(PIN_CATEGORY_CAPTURE, MEDIATYPE_Video, videoFilter, videoCapture);
 		}
 	}
 
 	if ((audioCapture || audioOutput) && success) {
-		IBaseFilter *filter = (audioCapture != nullptr)
-					      ? audioCapture.Get()
-					      : audioOutput.Get();
+		IBaseFilter *filter = (audioCapture != nullptr) ? audioCapture.Get() : audioOutput.Get();
 
 		/* Stream engine has a bug where it will break if you try to
 		 * set different audio buffering, so don't use audio buffering
 		 * if using the stream engine's audio */
 		bool streamEngine = audioConfig.useVideoDevice &&
-				    (videoConfig.name.find(L"Stream Engine") !=
-				     std::string::npos);
+				    (videoConfig.name.find(L"Stream Engine") != std::string::npos);
 
 		if (!streamEngine && audioCapture != nullptr)
 			SetAudioBuffering(10);
 
-		success = ConnectPins(PIN_CATEGORY_CAPTURE, MEDIATYPE_Audio,
-				      audioFilter, filter);
+		success = ConnectPins(PIN_CATEGORY_CAPTURE, MEDIATYPE_Audio, audioFilter, filter);
 		if (!success) {
-			success = RenderFilters(PIN_CATEGORY_CAPTURE,
-						MEDIATYPE_Audio, audioFilter,
-						filter);
+			success = RenderFilters(PIN_CATEGORY_CAPTURE, MEDIATYPE_Audio, audioFilter, filter);
 		}
 	}
 

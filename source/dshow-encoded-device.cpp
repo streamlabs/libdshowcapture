@@ -27,8 +27,8 @@
 
 namespace DShow {
 
-static inline bool CreateFilters(IBaseFilter *filter, IBaseFilter **crossbar,
-				 IBaseFilter **encoder, IBaseFilter **demuxer)
+static inline bool CreateFilters(IBaseFilter *filter, IBaseFilter **crossbar, IBaseFilter **encoder,
+				 IBaseFilter **demuxer)
 {
 	ComPtr<IPin> inputPin;
 	ComPtr<IPin> outputPin;
@@ -63,8 +63,7 @@ static inline bool CreateFilters(IBaseFilter *filter, IBaseFilter **crossbar,
 	if (hasOutMedium)
 		GetFilterByMedium(KSCATEGORY_ENCODER, outMedium, encoder);
 
-	hr = CoCreateInstance(CLSID_MPEG2Demultiplexer, nullptr,
-			      CLSCTX_INPROC_SERVER, IID_IBaseFilter,
+	hr = CoCreateInstance(CLSID_MPEG2Demultiplexer, nullptr, CLSCTX_INPROC_SERVER, IID_IBaseFilter,
 			      (void **)demuxer);
 	if (FAILED(hr)) {
 		WarningHR(L"Encoded Device: Failed to create demuxer", hr);
@@ -74,11 +73,8 @@ static inline bool CreateFilters(IBaseFilter *filter, IBaseFilter **crossbar,
 	return true;
 }
 
-static inline bool ConnectEncodedFilters(IGraphBuilder *graph,
-					 IBaseFilter *filter,
-					 IBaseFilter *crossbar,
-					 IBaseFilter *encoder,
-					 IBaseFilter *demuxer)
+static inline bool ConnectEncodedFilters(IGraphBuilder *graph, IBaseFilter *filter, IBaseFilter *crossbar,
+					 IBaseFilter *encoder, IBaseFilter *demuxer)
 {
 	if (!DirectConnectFilters(graph, crossbar, filter)) {
 		Warning(L"Encoded Device: Failed to connect crossbar to "
@@ -153,11 +149,7 @@ static inline bool MapPacketIDs(IBaseFilter *demuxer, ULONG video, ULONG audio)
  * programs because I could not figure out how the hell to get this thing
  * to turn on.
  */
-static const GUID RocketEncoderGUID = {0x99100000,
-				       0xa330,
-				       0x11e1,
-				       {0xa3, 0x80, 0x99, 0x10, 0x68, 0x64,
-					0x00, 0x00}};
+static const GUID RocketEncoderGUID = {0x99100000, 0xa330, 0x11e1, {0xa3, 0x80, 0x99, 0x10, 0x68, 0x64, 0x00, 0x00}};
 
 struct RocketPropStruct {
 	DWORD dwSize;
@@ -190,15 +182,13 @@ bool SetRocketEnabled(IBaseFilter *encoder, bool enable)
 	rocketProperty.enabled = enable;
 	rocketInstance.code = rocketEnableCode;
 
-	HRESULT hr = propertySet->Set(RocketEncoderGUID, rocketEnableId,
-				      &rocketInstance, sizeof(rocketInstance),
+	HRESULT hr = propertySet->Set(RocketEncoderGUID, rocketEnableId, &rocketInstance, sizeof(rocketInstance),
 				      &rocketProperty, sizeof(rocketProperty));
 
 	return SUCCEEDED(hr);
 }
 
-bool HDevice::SetupEncodedVideoCapture(IBaseFilter *filter, VideoConfig &config,
-				       const EncodedDevice &info)
+bool HDevice::SetupEncodedVideoCapture(IBaseFilter *filter, VideoConfig &config, const EncodedDevice &info)
 {
 	ComPtr<IBaseFilter> crossbar;
 	ComPtr<IBaseFilter> encoder;
@@ -209,12 +199,10 @@ bool HDevice::SetupEncodedVideoCapture(IBaseFilter *filter, VideoConfig &config,
 	if (!CreateFilters(filter, &crossbar, &encoder, &demuxer))
 		return false;
 
-	if (!CreateDemuxVideoPin(demuxer, mtVideo, info.width, info.height,
-				 info.frameInterval, info.videoFormat))
+	if (!CreateDemuxVideoPin(demuxer, mtVideo, info.width, info.height, info.frameInterval, info.videoFormat))
 		return false;
 
-	if (!CreateDemuxAudioPin(demuxer, mtAudio, info.samplesPerSec, 16, 2,
-				 info.audioFormat))
+	if (!CreateDemuxAudioPin(demuxer, mtAudio, info.samplesPerSec, 16, 2, info.audioFormat))
 		return false;
 
 	config.cx = info.width;
@@ -225,7 +213,9 @@ bool HDevice::SetupEncodedVideoCapture(IBaseFilter *filter, VideoConfig &config,
 	config.internalFormat = info.videoFormat;
 
 	PinCaptureInfo pci;
-	pci.callback = [this](IMediaSample *s) { Receive(true, s); };
+	pci.callback = [this](IMediaSample *s) {
+		Receive(true, s);
+	};
 	pci.expectedMajorType = mtVideo->majortype;
 	pci.expectedSubType = mtVideo->subtype;
 
@@ -247,11 +237,9 @@ bool HDevice::SetupEncodedVideoCapture(IBaseFilter *filter, VideoConfig &config,
 	if (!!encoder)
 		graph->AddFilter(encoder, L"Encoder");
 
-	bool success = ConnectEncodedFilters(graph, filter, crossbar, encoder,
-					     demuxer);
+	bool success = ConnectEncodedFilters(graph, filter, crossbar, encoder, demuxer);
 	if (success)
-		success = MapPacketIDs(demuxer, info.videoPacketID,
-				       info.audioPacketID);
+		success = MapPacketIDs(demuxer, info.videoPacketID, info.audioPacketID);
 
 	encodedDevice = success;
 	return success;

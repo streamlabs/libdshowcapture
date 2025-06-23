@@ -67,15 +67,13 @@ bool HVideoEncoder::ConnectFilters()
 		return false;
 	}
 
-	success = GetPinByName(device, PINDIR_OUTPUT, L"Virtual Video Out",
-			       &deviceOut);
+	success = GetPinByName(device, PINDIR_OUTPUT, L"Virtual Video Out", &deviceOut);
 	if (!success) {
 		Warning(L"Failed to get Virtual Video Out pin");
 		return false;
 	}
 
-	success = GetPinByName(encoder, PINDIR_INPUT, L"Virtual Video In",
-			       &encoderIn);
+	success = GetPinByName(encoder, PINDIR_INPUT, L"Virtual Video In", &encoderIn);
 	if (!success) {
 		Warning(L"Failed to get encoder input pin");
 		return false;
@@ -185,8 +183,7 @@ bool HVideoEncoder::SetupEncoder(IBaseFilter *filter)
 
 	inputPin.Release();
 
-	if (!GetFilterByMedium(CLSID_VideoInputDeviceCategory, medium,
-			       &deviceFilter)) {
+	if (!GetFilterByMedium(CLSID_VideoInputDeviceCategory, medium, &deviceFilter)) {
 		Warning(L"Could not get device filter from medium");
 		return false;
 	}
@@ -204,7 +201,9 @@ bool HVideoEncoder::SetupEncoder(IBaseFilter *filter)
 	}
 
 	PinCaptureInfo captureInfo;
-	captureInfo.callback = [this](IMediaSample *s) { Receive(s); };
+	captureInfo.callback = [this](IMediaSample *s) {
+		Receive(s);
+	};
 	captureInfo.expectedMajorType = mtEncoded->majortype;
 	captureInfo.expectedSubType = mtEncoded->subtype;
 
@@ -216,8 +215,7 @@ bool HVideoEncoder::SetupEncoder(IBaseFilter *filter)
 	encoder = filter;
 	device = std::move(deviceFilter);
 	capture = new CaptureFilter(captureInfo);
-	output = new OutputFilter(VideoFormat::YV12, config.cx, config.cy,
-				  frameTime);
+	output = new OutputFilter(VideoFormat::YV12, config.cx, config.cy, frameTime);
 
 	graph->AddFilter(output, nullptr);
 	graph->AddFilter(device, L"Device Filter");
@@ -234,8 +232,7 @@ static inline void Clamp(ULONG &val, ULONG minVal, ULONG maxVal)
 		val = maxVal;
 }
 
-HRESULT SetAVMEncoderSetting(IKsPropertySet *propertySet, ULONG setting,
-			     ULONG param1, ULONG param2)
+HRESULT SetAVMEncoderSetting(IKsPropertySet *propertySet, ULONG setting, ULONG param1, ULONG param2)
 {
 	AVER_PARAMETERS params = {};
 	params.ulIndex = setting;
@@ -250,9 +247,8 @@ HRESULT SetAVMEncoderSetting(IKsPropertySet *propertySet, ULONG setting,
 		Clamp(param1, 1, 30);
 	}
 
-	return propertySet->Set(AVER_HW_ENCODE_PROPERTY,
-				PROPERTY_HW_ENCODE_PARAMETER, &params,
-				sizeof(params), &params, sizeof(params));
+	return propertySet->Set(AVER_HW_ENCODE_PROPERTY, PROPERTY_HW_ENCODE_PARAMETER, &params, sizeof(params), &params,
+				sizeof(params));
 }
 
 bool SetAvermediaEncoderConfig(IBaseFilter *encoder, VideoEncoderConfig &config)
@@ -265,40 +261,33 @@ bool SetAvermediaEncoderConfig(IBaseFilter *encoder, VideoEncoderConfig &config)
 		return false;
 	}
 
-	double fps =
-		double(config.fpsNumerator) / double(config.fpsDenominator);
+	double fps = double(config.fpsNumerator) / double(config.fpsDenominator);
 
-	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_ENCODE_FRAME_RATE,
-				  ULONG(fps), 0);
+	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_ENCODE_FRAME_RATE, ULONG(fps), 0);
 	if (FAILED(hr)) {
 		WarningHR(L"Failed to set Avermedia encoder FPS", hr);
 		return false;
 	}
 
-	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_ENCODE_BIT_RATE,
-				  ULONG(config.bitrate), 0);
+	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_ENCODE_BIT_RATE, ULONG(config.bitrate), 0);
 	if (FAILED(hr)) {
 		WarningHR(L"Failed to set Avermedia encoder bitrate", hr);
 		return false;
 	}
 
-	hr = SetAVMEncoderSetting(propertySet,
-				  AVER_PARAMETER_CURRENT_RESOLUTION,
-				  ULONG(config.cx), ULONG(config.cy));
+	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_CURRENT_RESOLUTION, ULONG(config.cx), ULONG(config.cy));
 	if (FAILED(hr)) {
 		WarningHR(L"Failed to set Avermedia encoder current res", hr);
 		return false;
 	}
 
-	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_ENCODE_RESOLUTION,
-				  ULONG(config.cx), ULONG(config.cy));
+	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_ENCODE_RESOLUTION, ULONG(config.cx), ULONG(config.cy));
 	if (FAILED(hr)) {
 		WarningHR(L"Failed to set Avermedia encoder res", hr);
 		return false;
 	}
 
-	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_ENCODE_GOP,
-				  ULONG(config.keyframeInterval), 0);
+	hr = SetAVMEncoderSetting(propertySet, AVER_PARAMETER_ENCODE_GOP, ULONG(config.keyframeInterval), 0);
 	if (FAILED(hr)) {
 		WarningHR(L"Failed to set Avermedia encoder GOP", hr);
 		return false;
@@ -317,11 +306,9 @@ bool HVideoEncoder::SetConfig(VideoEncoderConfig &config)
 		return false;
 	}
 
-	bool success = GetDeviceFilter(KSCATEGORY_ENCODER, config.name.c_str(),
-				       config.path.c_str(), &filter);
+	bool success = GetDeviceFilter(KSCATEGORY_ENCODER, config.name.c_str(), config.path.c_str(), &filter);
 	if (!success) {
-		Warning(L"Video encoder '%s': %s not found",
-			config.name.c_str(), config.path.c_str());
+		Warning(L"Video encoder '%s': %s not found", config.name.c_str(), config.path.c_str());
 		return false;
 	}
 
@@ -378,10 +365,8 @@ void HVideoEncoder::Receive(IMediaSample *s)
 	packetMutex.unlock();
 }
 
-bool HVideoEncoder::Encode(unsigned char *data[DSHOW_MAX_PLANES],
-			   size_t linesize[DSHOW_MAX_PLANES],
-			   long long timestampStart, long long timestampEnd,
-			   EncoderPacket &packet, bool &new_packet)
+bool HVideoEncoder::Encode(unsigned char *data[DSHOW_MAX_PLANES], size_t linesize[DSHOW_MAX_PLANES],
+			   long long timestampStart, long long timestampEnd, EncoderPacket &packet, bool &new_packet)
 {
 	new_packet = false;
 
@@ -408,4 +393,4 @@ bool HVideoEncoder::Encode(unsigned char *data[DSHOW_MAX_PLANES],
 	return true;
 }
 
-};
+}; // namespace DShow

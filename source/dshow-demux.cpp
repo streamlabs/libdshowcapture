@@ -39,8 +39,8 @@ static inline const GUID &VideoFormatToSubType(VideoFormat format)
 	return GUID_NULL;
 }
 
-bool CreateDemuxVideoPin(IBaseFilter *demuxFilter, MediaType &mt, long width,
-			 long height, long long frameTime, VideoFormat format)
+bool CreateDemuxVideoPin(IBaseFilter *demuxFilter, MediaType &mt, long width, long height, long long frameTime,
+			 VideoFormat format)
 {
 	ComQIPtr<IMpeg2Demultiplexer> demuxer(demuxFilter);
 	if (!demuxer) {
@@ -109,9 +109,8 @@ static inline const GUID &AudioFormatToSubType(AudioFormat format)
 	return GUID_NULL;
 }
 
-bool CreateDemuxAudioPin(IBaseFilter *demuxFilter, MediaType &mt,
-			 DWORD samplesPerSec, WORD bitsPerSample, WORD channels,
-			 AudioFormat format)
+bool CreateDemuxAudioPin(IBaseFilter *demuxFilter, MediaType &mt, DWORD samplesPerSec, WORD bitsPerSample,
+			 WORD channels, AudioFormat format)
 {
 	ComQIPtr<IMpeg2Demultiplexer> demuxer(demuxFilter);
 	if (!demuxer) {
