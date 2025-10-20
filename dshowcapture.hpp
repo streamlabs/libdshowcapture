@@ -30,7 +30,7 @@
 #endif
 
 #define DSHOWCAPTURE_VERSION_MAJOR 0
-#define DSHOWCAPTURE_VERSION_MINOR 9
+#define DSHOWCAPTURE_VERSION_MINOR 10
 #define DSHOWCAPTURE_VERSION_PATCH 0
 
 #define MAKE_DSHOWCAPTURE_VERSION(major, minor, patch) \
@@ -191,7 +191,7 @@ struct AudioConfig : Config {
 	/**
 		 * Use the audio attached to the video device
 		 *
-		 * (name/path memeber variables will be ignored)
+		 * (name/path member variables will be ignored)
 		 */
 	bool useVideoDevice = false;
 
@@ -209,6 +209,9 @@ struct AudioConfig : Config {
 
 	/** Audio playback mode */
 	AudioMode mode = AudioMode::Capture;
+
+	/** Desired buffer */
+	int buffer = 0;
 };
 
 class DSHOWCAPTURE_EXPORT Device {
