@@ -510,7 +510,11 @@ static bool EnumExceptionVideoDevices(EnumDeviceCallback callback, void *param)
 	return true;
 }
 
-static recursive_mutex enumMutex;
+static std::mutex &GetEnumMutex()
+{
+	static std::mutex m;
+	return m;
+}
 
 static bool CheckForDLCallback(void *unused, IBaseFilter *filter,
 			       const wchar_t *deviceName,
@@ -536,7 +540,7 @@ static void CheckForDecklinkVideo(bool activate)
 
 bool EnumDevices(const GUID &type, EnumDeviceCallback callback, void *param, bool activate)
 {
-	lock_guard<recursive_mutex> lock(enumMutex);
+	lock_guard<std::mutex> lock(GetEnumMutex());
 	ComPtr<ICreateDevEnum> deviceEnum;
 	ComPtr<IEnumMoniker> enumMoniker;
 	ComPtr<IMoniker> deviceInfo;
