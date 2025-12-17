@@ -451,16 +451,20 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 	hr = deviceInfo->BindToStorage(0, 0, IID_IPropertyBag,
 				       (void **)&propertyData);
 	if (FAILED(hr))
-		return true;
+		goto cleanup;
 
-	VARIANT deviceName, devicePath;
+	VARIANT deviceName;
+	VariantInit(&deviceName);
 	deviceName.vt = VT_BSTR;
+
+	VARIANT devicePath;
+	VariantInit(&devicePath);
 	devicePath.vt = VT_BSTR;
-	devicePath.bstrVal = NULL;
 
 	hr = propertyData->Read(L"FriendlyName", &deviceName, NULL);
-	if (FAILED(hr))
-		return true;
+	if (FAILED(hr) || deviceName.vt != VT_BSTR || !deviceName.bstrVal) {
+		goto cleanup;
+	}
 
 	/* workaround to a crash in decklink drivers; if no decklink device
 	 * is plugged in to the system, it will still try to enumerate the
@@ -469,27 +473,30 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 	if (deviceName.bstrVal && type == CLSID_AudioInputDeviceCategory &&
 	    wcsstr(deviceName.bstrVal, L"Decklink") != nullptr &&
 	    !decklinkVideoPresent) {
-		return true;
+		goto cleanup;
 	}
 
-	hr = propertyData->Read(L"DevicePath", &devicePath, NULL);
+	HRESULT hrPath;
+	const wchar_t *devPath;
+	hrPath = propertyData->Read(L"DevicePath", &devicePath, nullptr);
+	devPath = SUCCEEDED(hrPath) ? devicePath.bstrVal : nullptr;
 
 	if (activate) {
-		hr = deviceInfo->BindToObject(NULL, 0, IID_IBaseFilter,
-						(void **)&filter);
-		if (SUCCEEDED(hr)) {
+		HRESULT hrObj = deviceInfo->BindToObject(
+			nullptr, 0, IID_IBaseFilter, (void **)&filter);
+		if (SUCCEEDED(hrObj)) {
 			if (!callback(param, filter, deviceName.bstrVal,
-					devicePath.bstrVal))
-					return false;
+				      devPath))
+				goto cleanup;
 		}
 	} else {
-		if (SUCCEEDED(hr)) {
-			if (!callback(param, NULL, deviceName.bstrVal,
-					devicePath.bstrVal))
-					return false;
-		}
+		if (!callback(param, nullptr, deviceName.bstrVal, devPath))
+			goto cleanup;
 	}
 
+cleanup:
+	VariantClear(&deviceName);
+	VariantClear(&devicePath);
 	return true;
 }
 
@@ -510,10 +517,8 @@ static bool EnumExceptionVideoDevices(EnumDeviceCallback callback, void *param)
 	return true;
 }
 
-static std::recursive_mutex &GetEnumMutex()
-{
-	static std::recursive_mutex m;
-	return m;
+namespace {
+static std::recursive_mutex g_enum_mutex;
 }
 
 static bool CheckForDLCallback(void *unused, IBaseFilter *filter,
@@ -540,7 +545,7 @@ static void CheckForDecklinkVideo(bool activate)
 
 bool EnumDevices(const GUID &type, EnumDeviceCallback callback, void *param, bool activate)
 {
-	lock_guard<std::recursive_mutex> lock(GetEnumMutex());
+	std::lock_guard<std::recursive_mutex> lock(g_enum_mutex);
 	ComPtr<ICreateDevEnum> deviceEnum;
 	ComPtr<IEnumMoniker> enumMoniker;
 	ComPtr<IMoniker> deviceInfo;
