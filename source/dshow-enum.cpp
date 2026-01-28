@@ -447,6 +447,7 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 	ComPtr<IPropertyBag> propertyData;
 	ComPtr<IBaseFilter> filter;
 	HRESULT hr;
+	bool result = true;
 
 	hr = deviceInfo->BindToStorage(0, 0, IID_IPropertyBag,
 				       (void **)&propertyData);
@@ -454,13 +455,16 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 		return true;
 
 	VARIANT deviceName, devicePath;
+	VariantInit(&deviceName);
+	VariantInit(&devicePath);
 	deviceName.vt = VT_BSTR;
+	deviceName.bstrVal = NULL;
 	devicePath.vt = VT_BSTR;
 	devicePath.bstrVal = NULL;
 
 	hr = propertyData->Read(L"FriendlyName", &deviceName, NULL);
-	if (FAILED(hr))
-		return true;
+	if (FAILED(hr) || deviceName.vt != VT_BSTR || !deviceName.bstrVal)
+		goto cleanup;
 
 	/* workaround to a crash in decklink drivers; if no decklink device
 	 * is plugged in to the system, it will still try to enumerate the
@@ -469,28 +473,37 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 	if (deviceName.bstrVal && type == CLSID_AudioInputDeviceCategory &&
 	    wcsstr(deviceName.bstrVal, L"Decklink") != nullptr &&
 	    !decklinkVideoPresent) {
-		return true;
+		goto cleanup;
 	}
 
 	hr = propertyData->Read(L"DevicePath", &devicePath, NULL);
+	if (FAILED(hr) || devicePath.vt != VT_BSTR || !devicePath.bstrVal)
+		goto cleanup;
 
 	if (activate) {
 		hr = deviceInfo->BindToObject(NULL, 0, IID_IBaseFilter,
 						(void **)&filter);
 		if (SUCCEEDED(hr)) {
 			if (!callback(param, filter, deviceName.bstrVal,
-					devicePath.bstrVal))
-					return false;
+					devicePath.bstrVal)) {
+				result = false;
+				goto cleanup;
+			}
 		}
 	} else {
 		if (SUCCEEDED(hr)) {
 			if (!callback(param, NULL, deviceName.bstrVal,
-					devicePath.bstrVal))
-					return false;
+					devicePath.bstrVal)) {
+				result = false;
+				goto cleanup;
+			}
 		}
 	}
 
-	return true;
+cleanup:
+	VariantClear(&deviceName);
+	VariantClear(&devicePath);
+	return result;
 }
 
 static bool EnumExceptionVideoDevices(EnumDeviceCallback callback, void *param)
