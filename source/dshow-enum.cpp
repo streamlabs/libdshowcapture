@@ -451,8 +451,10 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 
 	hr = deviceInfo->BindToStorage(0, 0, IID_IPropertyBag,
 				       (void **)&propertyData);
-	if (FAILED(hr))
+	if (FAILED(hr)) {
+		Debug(L"EnumDevice: BindToStorage failed (0x%x)", hr);
 		return true;
+	}
 
 	VARIANT deviceName, devicePath;
 	VariantInit(&deviceName);
@@ -463,8 +465,21 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 	devicePath.bstrVal = NULL;
 
 	hr = propertyData->Read(L"FriendlyName", &deviceName, NULL);
-	if (FAILED(hr) || deviceName.vt != VT_BSTR || !deviceName.bstrVal)
+	if (FAILED(hr)) {
+		Debug(L"EnumDevice: Failed to read FriendlyName (hr=0x%x)", hr);
 		goto cleanup;
+	}
+	
+	if (deviceName.vt != VT_BSTR) {
+		Debug(L"EnumDevice: FriendlyName variant type mismatch (vt=%d, expected VT_BSTR=%d)",
+		    deviceName.vt, VT_BSTR);
+		goto cleanup;
+	}
+	
+	if (!deviceName.bstrVal) {
+		Debug(L"EnumDevice: FriendlyName is NULL");
+		goto cleanup;
+	}
 
 	/* workaround to a crash in decklink drivers; if no decklink device
 	 * is plugged in to the system, it will still try to enumerate the
@@ -477,23 +492,42 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 	}
 
 	hr = propertyData->Read(L"DevicePath", &devicePath, NULL);
-	if (FAILED(hr) || devicePath.vt != VT_BSTR || !devicePath.bstrVal)
-		goto cleanup;
+	if (FAILED(hr)) {
+		Debug(L"EnumDevice: Failed to read DevicePath (hr=0x%x), using empty path", hr);
+		devicePath.bstrVal = NULL;
+	}
+	
+	if (devicePath.vt != VT_BSTR && devicePath.vt != VT_EMPTY) {
+		Debug(L"EnumDevice: DevicePath variant type mismatch (vt=%d, expected VT_BSTR=%d or VT_EMPTY=%d)",
+		    devicePath.vt, VT_BSTR, VT_EMPTY);
+		devicePath.bstrVal = NULL;
+	}
+
+	Debug(L"EnumDevice: Processing device - %s (path: %s)",
+	    deviceName.bstrVal, devicePath.bstrVal ? devicePath.bstrVal : L"[empty]");
 
 	if (activate) {
 		hr = deviceInfo->BindToObject(NULL, 0, IID_IBaseFilter,
 						(void **)&filter);
 		if (SUCCEEDED(hr)) {
+			Debug(L"EnumDevice: Callback invoked with filter for: %s",
+			    deviceName.bstrVal);
 			if (!callback(param, filter, deviceName.bstrVal,
 					devicePath.bstrVal)) {
+				Debug(L"EnumDevice: Callback returned false");
 				result = false;
 				goto cleanup;
 			}
+		} else {
+			Debug(L"EnumDevice: BindToObject failed (0x%x)", hr);
 		}
 	} else {
 		if (SUCCEEDED(hr)) {
+			Debug(L"EnumDevice: Callback invoked without filter for: %s",
+			    deviceName.bstrVal);
 			if (!callback(param, NULL, deviceName.bstrVal,
 					devicePath.bstrVal)) {
+				Debug(L"EnumDevice: Callback returned false");
 				result = false;
 				goto cleanup;
 			}
@@ -556,8 +590,13 @@ bool EnumDevices(const GUID &type, EnumDeviceCallback callback, void *param, boo
 	HRESULT hr;
 	DWORD count = 0;
 
-	if (type == CLSID_AudioInputDeviceCategory) {
+	if (type == CLSID_VideoInputDeviceCategory) {
+		Debug(L"EnumDevices: Starting VIDEO device enumeration (activate=%d)", activate);
+	} else if (type == CLSID_AudioInputDeviceCategory) {
+		Debug(L"EnumDevices: Starting AUDIO device enumeration (activate=%d)", activate);
 		CheckForDecklinkVideo(activate);
+	} else {
+		Debug(L"EnumDevices: Starting OTHER device enumeration (activate=%d)", activate);
 	}
 
 	hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL,
