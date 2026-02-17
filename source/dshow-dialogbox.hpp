@@ -3,10 +3,12 @@
 #include "../dshowcapture.hpp"
 #include "dshow-base.hpp"
 
+#include <mutex>
+
 namespace DShow {
     struct DeviceDialogBox {
         DeviceDialogBox();
-        ~DeviceDialogBox() = default;
+        ~DeviceDialogBox();
 
         void Open(IUnknown* filter);
         void Close();
@@ -17,9 +19,8 @@ namespace DShow {
             return obj->Create();
         }
 
+        std::mutex mutex;
         ComPtr<IUnknown> deviceFilter;
-        DWORD threadId;
         HANDLE threadHandle;
-        bool isOpen;
     };
 };
