@@ -441,6 +441,26 @@ bool EnumAudioCaps(IPin *pin, vector<AudioInfo> &caps)
 
 static bool decklinkVideoPresent = false;
 
+static HRESULT BindMonikerToFilter(IMoniker *deviceInfo, IBaseFilter **filter,
+				   DWORD *exceptionCode)
+{
+	if (exceptionCode)
+		*exceptionCode = 0;
+
+#ifdef _MSC_VER
+	__try {
+		return deviceInfo->BindToObject(NULL, 0, IID_IBaseFilter,
+						(void **)filter);
+	} __except (((exceptionCode) ? (*exceptionCode = GetExceptionCode()) : 0),
+		    EXCEPTION_EXECUTE_HANDLER) {
+		return E_FAIL;
+	}
+#else
+	return deviceInfo->BindToObject(NULL, 0, IID_IBaseFilter,
+					(void **)filter);
+#endif
+}
+
 static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 		       EnumDeviceCallback callback, void *param, bool activate)
 {
@@ -507,9 +527,12 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 	    deviceName.bstrVal, devicePath.bstrVal ? devicePath.bstrVal : L"[empty]");
 
 	if (activate) {
-		hr = deviceInfo->BindToObject(NULL, 0, IID_IBaseFilter,
-						(void **)&filter);
+		IBaseFilter *rawFilter = nullptr;
+		DWORD exceptionCode = 0;
+
+		hr = BindMonikerToFilter(deviceInfo, &rawFilter, &exceptionCode);
 		if (SUCCEEDED(hr)) {
+			filter.Set(rawFilter);
 			Debug(L"EnumDevice: Callback invoked with filter for: %s",
 			    deviceName.bstrVal);
 			if (!callback(param, filter, deviceName.bstrVal,
@@ -518,6 +541,10 @@ static bool EnumDevice(const GUID &type, IMoniker *deviceInfo,
 				result = false;
 				goto cleanup;
 			}
+		} else if (exceptionCode) {
+			Warning(L"EnumDevice: BindToObject raised exception 0x%08x for: %s (path: %s)",
+				exceptionCode, deviceName.bstrVal,
+				devicePath.bstrVal ? devicePath.bstrVal : L"[empty]");
 		} else {
 			Debug(L"EnumDevice: BindToObject failed (0x%x)", hr);
 		}
