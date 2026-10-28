@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <cstdint>
 
 #ifdef DSHOWCAPTURE_EXPORTS
 #define DSHOWCAPTURE_EXPORT __declspec(dllexport)
@@ -242,6 +243,8 @@ public:
 	bool ConnectFilters();
 
 	Result Start();
+	// Returns the failed IMediaControl::Run HRESULT, or zero when unavailable/successful.
+	Result Start(uint32_t *errorCode);
 	void Stop();
 
 	bool GetVideoConfig(VideoConfig &config) const;

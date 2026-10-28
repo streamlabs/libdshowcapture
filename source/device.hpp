@@ -118,7 +118,7 @@ struct HDevice {
 	void SetAudioBuffering(int bufferingMs);
 	bool ConnectFilters();
 	void DisconnectFilters();
-	Result Start();
+	Result Start(uint32_t *errorCode = nullptr);
 	void Stop();
 };
 

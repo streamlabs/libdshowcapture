@@ -852,9 +852,11 @@ void HDevice::DisconnectFilters()
 	}
 }
 
-Result HDevice::Start()
+Result HDevice::Start(uint32_t *errorCode)
 {
 	HRESULT hr;
+	if (errorCode)
+		*errorCode = 0;
 
 	if (!EnsureInitialized(L"Start") || !EnsureInactive(L"Start"))
 		return Result::Error;
@@ -865,6 +867,8 @@ Result HDevice::Start()
 	hr = control->Run();
 
 	if (FAILED(hr)) {
+		if (errorCode)
+			*errorCode = static_cast<uint32_t>(hr);
 		if (hr == (HRESULT)0x8007001F) {
 			WarningHR(L"Run failed, device already in use", hr);
 			return Result::InUse;

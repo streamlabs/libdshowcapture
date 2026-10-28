@@ -101,6 +101,11 @@ Result Device::Start()
 	return context->Start();
 }
 
+Result Device::Start(uint32_t *errorCode)
+{
+	return context->Start(errorCode);
+}
+
 void Device::Stop()
 {
 	context->Stop();
