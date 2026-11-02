@@ -243,7 +243,7 @@ public:
 	bool ConnectFilters();
 
 	Result Start();
-	// Returns the failed IMediaControl::Run HRESULT, or zero when unavailable/successful.
+	// Sets errorCode if result is not 'Success'
 	Result Start(uint32_t *errorCode);
 	void Stop();
 
